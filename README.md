@@ -2,6 +2,12 @@
 
 一个基于AI的智能记忆卡片生成工具，可以将任意文本转换为高质量的Anki记忆卡片。
 
+## 🌐 在线体验
+
+**[立即体验 CodeCA →](https://traecodecavzfl-hgitvfwgt-987622272s-projects.vercel.app/editor)**
+
+无需安装，直接在浏览器中体验完整功能！
+
 ## ✨ 功能特性
 
 ### 🤖 AI驱动的卡片生成
