@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  line-height: 1.5;
+  font-weight: 400;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+#root {
+  width: 100%;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+/* Card Content Styles */
+.card-content {
+  line-height: 1.6;
+}
+
+.card-content .hljs {
+  background: #1f2937 !important;
+  color: #f9fafb !important;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.card-content .hljs-keyword {
+  color: #8b5cf6 !important;
+}
+
+.card-content .hljs-string {
+  color: #10b981 !important;
+}
+
+.card-content .hljs-number {
+  color: #f59e0b !important;
+}
+
+.card-content .hljs-comment {
+  color: #6b7280 !important;
+  font-style: italic;
+}
+
+.card-content .hljs-function {
+  color: #3b82f6 !important;
+}
+
+.card-back {
+  /* Additional styles for card back */
+}
+
+.card-front {
+  /* Additional styles for card front */
+}
