@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Download, FileText, Package, Share2, Copy, CheckCircle, ShoppingCart } from 'lucide-react';
+import { Download, FileText, Package, Share2, Copy, CheckCircle, ShoppingCart, Zap, AlertCircle } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
 import { saveAs } from 'file-saver';
@@ -12,6 +12,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import { remark } from 'remark';
 import remarkHtml from 'remark-html';
+import ankiConnectService from '@/services/ankiConnectService';
 
 
 
@@ -56,6 +57,12 @@ export default function Export() {
   const [shareUrl, setShareUrl] = useState('');
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [isBucketMode, setIsBucketMode] = useState(false);
+  const [isImportingToAnki, setIsImportingToAnki] = useState(false);
+  const [ankiConnected, setAnkiConnected] = useState(false);
+  const [showAnkiDialog, setShowAnkiDialog] = useState(false);
+  const [selectedAnkiDeck, setSelectedAnkiDeck] = useState('');
+  const [availableDecks, setAvailableDecks] = useState<string[]>([]);
+  const [newDeckName, setNewDeckName] = useState('');
   
   // Determine if we're in bucket mode
   useEffect(() => {
@@ -65,6 +72,27 @@ export default function Export() {
       setDeckName(t('selectedCardsFromBucket'));
     }
   }, [searchParams]);
+
+  // Check AnkiConnect connection on component mount
+  useEffect(() => {
+    const checkAnkiConnection = async () => {
+      try {
+        const connected = await ankiConnectService.checkConnection();
+        setAnkiConnected(connected);
+        if (connected) {
+          const decks = await ankiConnectService.getDeckNames();
+          setAvailableDecks(decks);
+          if (decks.length > 0) {
+            setSelectedAnkiDeck(decks[0]);
+          }
+        }
+      } catch (error) {
+        setAnkiConnected(false);
+      }
+    };
+    
+    checkAnkiConnection();
+  }, []);
   
   // Get the appropriate cards to export
   const cardsToExport = isBucketMode ? getBucketCards() : cards;
@@ -370,6 +398,71 @@ a:hover { color: #1d4ed8; }
     }
   };
 
+  const handleAnkiImport = async () => {
+    if (cardsToExport.length === 0) {
+      toast.error(isBucketMode ? t('noCardsInBucketToExport') : t('noCardsToExport'));
+      return;
+    }
+
+    if (!ankiConnected) {
+      toast.error('无法连接到Anki。请确保Anki正在运行并且已安装AnkiConnect插件。');
+      return;
+    }
+
+    setShowAnkiDialog(true);
+  };
+
+  const confirmAnkiImport = async () => {
+    if (!selectedAnkiDeck && !newDeckName) {
+      toast.error('请选择或创建一个牌组');
+      return;
+    }
+
+    setIsImportingToAnki(true);
+    
+    try {
+      const targetDeck = newDeckName || selectedAnkiDeck;
+      
+      const result = await ankiConnectService.addNotes(cardsToExport, targetDeck);
+      
+      if (result.success > 0) {
+        toast.success(`成功导入 ${result.success} 张卡片到Anki`);
+        if (result.failed > 0) {
+          toast.warning(`${result.failed} 张卡片导入失败`);
+        }
+      } else {
+        toast.error('所有卡片导入失败');
+      }
+      
+      setShowAnkiDialog(false);
+      setNewDeckName('');
+    } catch (error) {
+      toast.error(`导入失败: ${error instanceof Error ? error.message : '未知错误'}`);
+    } finally {
+      setIsImportingToAnki(false);
+    }
+  };
+
+  const refreshAnkiConnection = async () => {
+    try {
+      const connected = await ankiConnectService.checkConnection();
+      setAnkiConnected(connected);
+      if (connected) {
+        const decks = await ankiConnectService.getDeckNames();
+        setAvailableDecks(decks);
+        if (decks.length > 0 && !selectedAnkiDeck) {
+          setSelectedAnkiDeck(decks[0]);
+        }
+        toast.success('已连接到Anki');
+      } else {
+        toast.error('无法连接到Anki');
+      }
+    } catch (error) {
+      setAnkiConnected(false);
+      toast.error('连接Anki失败');
+    }
+  };
+
   const selectedFormatData = exportFormats.find(f => f.id === selectedFormat);
 
   return (
@@ -476,31 +569,82 @@ a:hover { color: #1d4ed8; }
               {/* Export Actions */}
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t('exportActions')}</h2>
-                <div className="flex flex-col sm:flex-row gap-4">
+                
+                {/* AnkiConnect Status */}
+                <div className="mb-4 p-3 rounded-lg border">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div className={cn(
+                        "w-2 h-2 rounded-full",
+                        ankiConnected ? "bg-green-500" : "bg-red-500"
+                      )} />
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        Anki {ankiConnected ? '已连接' : '未连接'}
+                      </span>
+                    </div>
+                    <button
+                      onClick={refreshAnkiConnection}
+                      className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
+                    >
+                      刷新
+                    </button>
+                  </div>
+                  {!ankiConnected && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      请确保Anki正在运行并已安装AnkiConnect插件
+                    </p>
+                  )}
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <button
                     onClick={handleExport}
                     disabled={isExporting}
-                    className="flex-1 flex items-center justify-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                    className="flex items-center justify-center space-x-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                   >
                     {isExporting ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-                        <span>{t('exporting')}</span>
+                        <span className="text-sm">{t('exporting')}</span>
                       </>
                     ) : (
                       <>
                         <Download className="h-4 w-4" />
-                        <span>{t('download')} {selectedFormatData?.name}</span>
+                        <span className="text-sm">{t('download')}</span>
+                      </>
+                    )}
+                  </button>
+                  
+                  <button
+                    onClick={handleAnkiImport}
+                    disabled={!ankiConnected || isImportingToAnki}
+                    className={cn(
+                      "flex items-center justify-center space-x-2 px-4 py-3 rounded-lg font-medium text-sm",
+                      ankiConnected
+                        ? "bg-green-600 text-white hover:bg-green-700"
+                        : "bg-gray-300 text-gray-500 cursor-not-allowed",
+                      isImportingToAnki && "opacity-50 cursor-not-allowed"
+                    )}
+                  >
+                    {isImportingToAnki ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                        <span>导入中</span>
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="h-4 w-4" />
+                        <span>导入Anki</span>
                       </>
                     )}
                   </button>
                   
                   <button
                     onClick={handleShare}
-                    className="flex-1 flex items-center justify-center space-x-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium"
+                    className="flex items-center justify-center space-x-2 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium"
                   >
                     <Share2 className="h-4 w-4" />
-                    <span>{t('shareDeck')}</span>
+                    <span className="text-sm">{t('shareDeck')}</span>
                   </button>
                 </div>
               </div>
@@ -598,6 +742,93 @@ a:hover { color: #1d4ed8; }
                   className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
                 >
                   {t('close')}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Anki Import Dialog */}
+        {showAnkiDialog && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <Zap className="h-5 w-5 text-green-600" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">导入到Anki</h3>
+              </div>
+              
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                将 {cardsToExport.length} 张卡片导入到Anki牌组中
+              </p>
+              
+              <div className="space-y-4">
+                {/* 选择现有牌组 */}
+                {availableDecks.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      选择现有牌组
+                    </label>
+                    <select
+                      value={selectedAnkiDeck}
+                      onChange={(e) => {
+                        setSelectedAnkiDeck(e.target.value);
+                        setNewDeckName('');
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    >
+                      <option value="">选择牌组...</option>
+                      {availableDecks.map((deck) => (
+                        <option key={deck} value={deck}>
+                          {deck}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                
+                {/* 或创建新牌组 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    或创建新牌组
+                  </label>
+                  <input
+                    type="text"
+                    value={newDeckName}
+                    onChange={(e) => {
+                      setNewDeckName(e.target.value);
+                      setSelectedAnkiDeck('');
+                    }}
+                    placeholder="输入新牌组名称"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  />
+                </div>
+                
+                {!ankiConnected && (
+                  <div className="flex items-center space-x-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                    <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                    <span className="text-sm text-red-600 dark:text-red-400">
+                      无法连接到Anki，请检查Anki是否运行
+                    </span>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowAnkiDialog(false);
+                    setNewDeckName('');
+                  }}
+                  className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={confirmAnkiImport}
+                  disabled={(!selectedAnkiDeck && !newDeckName) || isImportingToAnki || !ankiConnected}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isImportingToAnki ? '导入中...' : '确认导入'}
                 </button>
               </div>
             </div>
