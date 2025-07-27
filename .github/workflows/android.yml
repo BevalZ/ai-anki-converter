@@ -59,14 +59,17 @@ jobs:
 
       - name: Initialize Tauri Android
         run: |
-          if [ ! -d "src-tauri/gen/android" ]; then
+          cd src-tauri
+          if [ ! -d "gen/android" ]; then
             tauri android init
           else
             echo "Android project already initialized"
           fi
 
       - name: Build Android APK
-        run: tauri android build --apk
+        run: |
+          cd src-tauri
+          tauri android build --apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
