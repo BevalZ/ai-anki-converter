@@ -1,4 +1,4 @@
-name: Release
+name: Build Desktop (macOS & Linux)
 
 on:
   push:
@@ -8,11 +8,11 @@ on:
     inputs:
       version:
         description: 'Release version (e.g., v1.0.0)'
-        required: true
+        required: false
         type: string
 
 jobs:
-  release:
+  build-desktop:
     permissions:
       contents: write
     strategy:
@@ -28,9 +28,6 @@ jobs:
           - platform: 'ubuntu-22.04'
             args: ''
             name: 'linux-x64'
-          - platform: 'windows-latest'
-            args: ''
-            name: 'windows-x64'
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -81,10 +78,8 @@ jobs:
             
             ### 📦 下载安装包
             
-            - **Windows**: 下载 `.msi` 或 `.exe` 文件
             - **macOS**: 下载 `.dmg` 文件 (支持 Intel 和 Apple Silicon)
             - **Linux**: 下载 `.AppImage` 或 `.deb` 文件
-            - **Android**: 下载 `.apk` 文件
             
             ### ✨ 更新内容
             
@@ -96,68 +91,3 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
-
-  build-android:
-    permissions:
-      contents: write
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install Android NDK
-        run: |
-          sdkmanager "ndk;25.0.8775105"
-          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.0.8775105" >> $GITHUB_ENV
-
-      - name: Rust setup
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: 'aarch64-linux-android,armv7-linux-androideabi'
-
-      - name: Rust cache
-        uses: swatinem/rust-cache@v2
-        with:
-          workspaces: './src-tauri -> target'
-
-      - name: Sync node version and setup cache
-        uses: actions/setup-node@v4
-        with:
-          node-version: 'lts/*'
-          cache: 'npm'
-
-      - name: Install frontend dependencies
-        run: npm ci
-
-      - name: Install Tauri Android
-        run: npm install @tauri-apps/cli@latest
-
-      - name: Initialize Tauri Android
-        run: npx tauri android init
-
-      - name: Build Android APK
-        run: npx tauri android build --apk
-
-      - name: Upload Android APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-apk
-          path: src-tauri/gen/android/app/build/outputs/apk/universal/release/*.apk
-
-      - name: Create Release (Android)
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v1
-        with:
-          files: src-tauri/gen/android/app/build/outputs/apk/universal/release/*.apk
-          draft: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   

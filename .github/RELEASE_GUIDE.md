@@ -4,37 +4,52 @@
 
 ## 🚀 自动构建流程
 
-### 1. 桌面端构建 (Windows, macOS, Linux)
-
-**触发方式：**
-- 推送到 `main` 或 `develop` 分支
-- 创建 Pull Request
-- 手动触发
-
-**构建平台：**
-- **Windows**: `.exe` 安装包和便携版
-- **macOS**: `.dmg` 安装包 (支持 Intel 和 Apple Silicon)
-- **Linux**: `.AppImage` 和 `.deb` 包
-
-**工作流文件：** `.github/workflows/build.yml`
-
-### 2. 正式发布构建
+### 1. Android 构建
 
 **触发方式：**
 - 推送 Git 标签 (如 `v1.0.0`)
 - 手动触发
 
-**工作流文件：** `.github/workflows/release.yml`
-
-### 3. Android 构建
-
-**触发方式：**
-- 手动触发
-- 推送 Git 标签
-
 **构建产物：** `.apk` 安装包
 
 **工作流文件：** `.github/workflows/android.yml`
+
+**特性：**
+- 自动初始化 Android 项目 (`tauri android init`)
+- 支持多架构 (ARM64, ARMv7, x86, x86_64)
+- 自动发布到 GitHub Releases
+
+### 2. 桌面端构建 (macOS & Linux)
+
+**触发方式：**
+- 推送 Git 标签 (如 `v1.0.0`)
+- 手动触发
+
+**构建平台：**
+- **macOS**: `.dmg` 安装包 (支持 Intel 和 Apple Silicon)
+- **Linux**: `.AppImage` 和 `.deb` 包
+
+**工作流文件：** `.github/workflows/desktop.yml`
+
+**特性：**
+- 支持 macOS 代码签名
+- 多架构构建 (ARM64, x86_64)
+- 自动发布到 GitHub Releases
+
+### 3. Windows 构建
+
+**触发方式：**
+- 推送 Git 标签 (如 `v1.0.0`)
+- 手动触发
+
+**构建产物：** `.msi` 和 `.exe` 安装包
+
+**工作流文件：** `.github/workflows/windows.yml`
+
+**特性：**
+- 支持 Windows 代码签名
+- 生成 MSI 和 NSIS 安装包
+- 自动发布到 GitHub Releases
 
 ## 📋 发布步骤
 
@@ -56,8 +71,10 @@
    ```
 
 3. **等待构建完成**
-   - 桌面端构建大约需要 15-30 分钟
    - Android 构建大约需要 20-40 分钟
+   - macOS & Linux 构建大约需要 15-30 分钟
+   - Windows 构建大约需要 10-20 分钟
+   - 三个工作流会并行执行
 
 4. **发布 Release**
    - 前往 GitHub Releases 页面
@@ -85,7 +102,9 @@
 
 ### Android 配置
 
-1. **初始化 Android 项目**
+**注意：** GitHub Actions 会自动处理 Android 项目初始化，无需手动配置。
+
+1. **本地开发初始化** (仅本地开发需要)
    ```bash
    npm install -g @tauri-apps/cli@latest
    tauri android init
@@ -94,6 +113,11 @@
 2. **配置 Android 签名** (可选)
    - 在 `src-tauri/gen/android/app/build.gradle` 中配置签名
    - 添加 keystore 文件到仓库或使用 GitHub Secrets
+
+3. **自动化特性**
+   - CI/CD 自动检测并初始化 Android 项目
+   - 支持多架构构建 (ARM64, ARMv7, x86, x86_64)
+   - 自动生成通用 APK
 
 ## 🔧 本地构建
 
@@ -141,9 +165,10 @@ tauri android build --aab
    - 清理缓存：`npm ci` 和 `cargo clean`
 
 2. **Android 构建失败**
-   - 确保 Android NDK 版本兼容
+   - 确保 Android NDK 版本兼容 (使用 NDK 25.0.8775105)
    - 检查 Java 版本 (推荐 Java 17)
    - 验证 Android SDK 配置
+   - 如果提示 "Android Studio project directory doesn't exist"，工作流会自动运行 `tauri android init`
 
 3. **代码签名失败**
    - 验证证书有效性
