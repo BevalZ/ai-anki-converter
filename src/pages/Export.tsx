@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Download, FileText, Package, Share2, Copy, CheckCircle, ShoppingCart, Zap, AlertCircle } from 'lucide-react';
+import { Download, FileText, Package, Share2, Zap, ShoppingCart, CheckCircle, Copy, AlertCircle, Image, Eye } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
 import { saveAs } from 'file-saver';
@@ -13,6 +13,7 @@ import rehypeRaw from 'rehype-raw';
 import { remark } from 'remark';
 import remarkHtml from 'remark-html';
 import ankiConnectService from '@/services/ankiConnectService';
+import { exportCardsAsImages, createCardPreview, ImageFormat, ImageExportOptions } from '@/utils/imageExport';
 
 
 
@@ -27,6 +28,13 @@ export default function Export() {
       description: t('exportFormats.ankiDescription'),
       icon: Package,
       recommended: true
+    },
+    {
+      id: 'image',
+      name: 'Images',
+      description: 'Export cards as images (PNG, JPEG, SVG)',
+      icon: Image,
+      recommended: false
     },
     {
       id: 'csv',
@@ -50,6 +58,12 @@ export default function Export() {
       recommended: false
     }
   ];
+
+  const imageFormats = [
+    { id: 'png' as ImageFormat, name: 'PNG', description: 'High quality with transparency support' },
+    { id: 'jpeg' as ImageFormat, name: 'JPEG', description: 'Smaller file size, good for photos' },
+    { id: 'svg' as ImageFormat, name: 'SVG', description: 'Vector format, scalable and small' }
+  ];
   const [searchParams] = useSearchParams();
   const [selectedFormat, setSelectedFormat] = useState('apkg');
   const [deckName, setDeckName] = useState('My Anki Deck');
@@ -63,6 +77,13 @@ export default function Export() {
   const [selectedAnkiDeck, setSelectedAnkiDeck] = useState('');
   const [availableDecks, setAvailableDecks] = useState<string[]>([]);
   const [newDeckName, setNewDeckName] = useState('');
+  
+  // Image export states
+  const [selectedImageFormat, setSelectedImageFormat] = useState<ImageFormat>('png');
+  const [selectedCards, setSelectedCards] = useState<Set<string>>(new Set());
+  const [showImagePreview, setShowImagePreview] = useState(false);
+  const [isExportingImages, setIsExportingImages] = useState(false);
+  const [cardPreviews, setCardPreviews] = useState<Map<string, string>>(new Map());
   
   // Determine if we're in bucket mode
   useEffect(() => {
@@ -343,6 +364,9 @@ a:hover { color: #1d4ed8; }
           filename = `${deckName.replace(/[^a-z0-9]/gi, '_')}.apkg`;
           mimeType = 'application/zip';
           break;
+        case 'image':
+          await handleImageExport();
+          return;
         default:
           throw new Error(t('unsupportedFormat'));
       }
@@ -361,6 +385,73 @@ a:hover { color: #1d4ed8; }
     } finally {
       setIsExporting(false);
     }
+  };
+
+  const handleImageExport = async () => {
+    if (selectedCards.size === 0) {
+      // If no cards selected, export all cards
+      const allCardIds = new Set(cardsToExport.map(card => card.id));
+      setSelectedCards(allCardIds);
+      
+      const options: ImageExportOptions = {
+        format: selectedImageFormat,
+        quality: selectedImageFormat === 'jpeg' ? 0.9 : undefined,
+        width: 800,
+        height: 600
+      };
+      
+      await exportCardsAsImages(cardsToExport, options, deckName);
+    } else {
+      // Export only selected cards
+      const selectedCardsList = cardsToExport.filter(card => selectedCards.has(card.id));
+      
+      const options: ImageExportOptions = {
+        format: selectedImageFormat,
+        quality: selectedImageFormat === 'jpeg' ? 0.9 : undefined,
+        width: 800,
+        height: 600
+      };
+      
+      await exportCardsAsImages(selectedCardsList, options, deckName);
+    }
+  };
+
+  const generateCardPreviews = async () => {
+    const previews = new Map<string, string>();
+    
+    for (const card of cardsToExport) {
+      try {
+        const previewUrl = await createCardPreview(card, {
+          format: selectedImageFormat,
+          width: 400,
+          height: 300
+        });
+        previews.set(card.id, previewUrl);
+      } catch (error) {
+        console.error(`Failed to generate preview for card ${card.id}:`, error);
+      }
+    }
+    
+    setCardPreviews(previews);
+  };
+
+  const toggleCardSelection = (cardId: string) => {
+    const newSelection = new Set(selectedCards);
+    if (newSelection.has(cardId)) {
+      newSelection.delete(cardId);
+    } else {
+      newSelection.add(cardId);
+    }
+    setSelectedCards(newSelection);
+  };
+
+  const selectAllCards = () => {
+    const allCardIds = new Set(cardsToExport.map(card => card.id));
+    setSelectedCards(allCardIds);
+  };
+
+  const deselectAllCards = () => {
+    setSelectedCards(new Set());
   };
 
   const handleShare = async () => {
@@ -564,6 +655,52 @@ a:hover { color: #1d4ed8; }
                     );
                   })}
                 </div>
+                
+                {/* Image Format Options */}
+                {selectedFormat === 'image' && (
+                  <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                    <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">Image Format Options</h3>
+                    <div className="space-y-3">
+                      {imageFormats.map((format) => (
+                        <label
+                          key={format.id}
+                          className={cn(
+                            'flex items-start space-x-3 p-3 border rounded-lg cursor-pointer transition-colors',
+                            selectedImageFormat === format.id
+                              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                              : 'border-gray-200 dark:border-gray-600 hover:border-gray-300'
+                          )}
+                        >
+                          <input
+                            type="radio"
+                            name="imageFormat"
+                            value={format.id}
+                            checked={selectedImageFormat === format.id}
+                            onChange={(e) => setSelectedImageFormat(e.target.value as ImageFormat)}
+                            className="mt-1 text-blue-600 focus:ring-blue-500"
+                          />
+                          <div>
+                            <span className="font-medium text-gray-900 dark:text-white">{format.name}</span>
+                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{format.description}</p>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                    
+                    <div className="mt-4 flex space-x-2">
+                      <button
+                        onClick={() => {
+                          setShowImagePreview(true);
+                          generateCardPreviews();
+                        }}
+                        className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+                      >
+                        <Eye className="h-4 w-4" />
+                        <span>Preview Cards</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Export Actions */}
@@ -830,6 +967,123 @@ a:hover { color: #1d4ed8; }
                 >
                   {isImportingToAnki ? '导入中...' : '确认导入'}
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Image Preview Dialog */}
+        {showImagePreview && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+              <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center space-x-2">
+                  <Image className="h-5 w-5 text-blue-600" />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Card Preview - {selectedImageFormat.toUpperCase()}</h3>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={selectAllCards}
+                    className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                  >
+                    Select All
+                  </button>
+                  <button
+                    onClick={deselectAllCards}
+                    className="px-3 py-1 text-sm bg-gray-600 text-white rounded hover:bg-gray-700"
+                  >
+                    Deselect All
+                  </button>
+                  <button
+                    onClick={() => setShowImagePreview(false)}
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+              
+              <div className="p-6 overflow-y-auto max-h-[60vh]">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {cardsToExport.map((card) => {
+                    const previewUrl = cardPreviews.get(card.id);
+                    const isSelected = selectedCards.has(card.id);
+                    
+                    return (
+                      <div
+                        key={card.id}
+                        className={cn(
+                          'border-2 rounded-lg p-3 cursor-pointer transition-colors',
+                          isSelected
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                            : 'border-gray-200 dark:border-gray-600 hover:border-gray-300'
+                        )}
+                        onClick={() => toggleCardSelection(card.id)}
+                      >
+                        <div className="flex items-center space-x-2 mb-2">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleCardSelection(card.id)}
+                            className="text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">
+                            Card {cardsToExport.indexOf(card) + 1}
+                          </span>
+                        </div>
+                        
+                        {previewUrl ? (
+                          <img
+                            src={previewUrl}
+                            alt={`Card ${card.id} preview`}
+                            className="w-full h-32 object-cover rounded border"
+                          />
+                        ) : (
+                          <div className="w-full h-32 bg-gray-100 dark:bg-gray-700 rounded border flex items-center justify-center">
+                            <span className="text-gray-500 text-sm">Generating preview...</span>
+                          </div>
+                        )}
+                        
+                        <div className="mt-2 text-xs text-gray-600 dark:text-gray-400 truncate">
+                          {card.front.substring(0, 50)}...
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              
+              <div className="flex justify-between items-center p-6 border-t border-gray-200 dark:border-gray-700">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {selectedCards.size} of {cardsToExport.length} cards selected
+                </span>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => setShowImagePreview(false)}
+                    className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={async () => {
+                      setShowImagePreview(false);
+                      setIsExportingImages(true);
+                      try {
+                        await handleImageExport();
+                        toast.success('Images exported successfully!');
+                      } catch (error) {
+                        toast.error('Failed to export images');
+                        console.error('Image export error:', error);
+                      } finally {
+                        setIsExportingImages(false);
+                      }
+                    }}
+                    disabled={selectedCards.size === 0 && cardsToExport.length > 0}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Export Selected ({selectedCards.size || cardsToExport.length})
+                  </button>
+                </div>
               </div>
             </div>
           </div>

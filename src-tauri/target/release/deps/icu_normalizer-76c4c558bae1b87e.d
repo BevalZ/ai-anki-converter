@@ -1,0 +1,10 @@
+/Users/haozhao/Desktop/Programming/ai-anki-converter/src-tauri/target/release/deps/libicu_normalizer-76c4c558bae1b87e.rmeta: /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/icu_normalizer-2.0.0/src/lib.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/icu_normalizer-2.0.0/src/properties.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/icu_normalizer-2.0.0/src/provider.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/icu_normalizer-2.0.0/src/uts46.rs
+
+/Users/haozhao/Desktop/Programming/ai-anki-converter/src-tauri/target/release/deps/libicu_normalizer-76c4c558bae1b87e.rlib: /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/icu_normalizer-2.0.0/src/lib.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/icu_normalizer-2.0.0/src/properties.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/icu_normalizer-2.0.0/src/provider.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/icu_normalizer-2.0.0/src/uts46.rs
+
+/Users/haozhao/Desktop/Programming/ai-anki-converter/src-tauri/target/release/deps/icu_normalizer-76c4c558bae1b87e.d: /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/icu_normalizer-2.0.0/src/lib.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/icu_normalizer-2.0.0/src/properties.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/icu_normalizer-2.0.0/src/provider.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/icu_normalizer-2.0.0/src/uts46.rs
+
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/icu_normalizer-2.0.0/src/lib.rs:
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/icu_normalizer-2.0.0/src/properties.rs:
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/icu_normalizer-2.0.0/src/provider.rs:
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/icu_normalizer-2.0.0/src/uts46.rs:

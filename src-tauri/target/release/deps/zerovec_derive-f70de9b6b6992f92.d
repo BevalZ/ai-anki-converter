@@ -1,0 +1,10 @@
+/Users/haozhao/Desktop/Programming/ai-anki-converter/src-tauri/target/release/deps/libzerovec_derive-f70de9b6b6992f92.dylib: /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerovec-derive-0.11.1/src/lib.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerovec-derive-0.11.1/src/make_ule.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerovec-derive-0.11.1/src/make_varule.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerovec-derive-0.11.1/src/ule.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerovec-derive-0.11.1/src/utils.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerovec-derive-0.11.1/src/varule.rs
+
+/Users/haozhao/Desktop/Programming/ai-anki-converter/src-tauri/target/release/deps/zerovec_derive-f70de9b6b6992f92.d: /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerovec-derive-0.11.1/src/lib.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerovec-derive-0.11.1/src/make_ule.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerovec-derive-0.11.1/src/make_varule.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerovec-derive-0.11.1/src/ule.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerovec-derive-0.11.1/src/utils.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerovec-derive-0.11.1/src/varule.rs
+
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerovec-derive-0.11.1/src/lib.rs:
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerovec-derive-0.11.1/src/make_ule.rs:
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerovec-derive-0.11.1/src/make_varule.rs:
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerovec-derive-0.11.1/src/ule.rs:
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerovec-derive-0.11.1/src/utils.rs:
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/zerovec-derive-0.11.1/src/varule.rs:

@@ -1,0 +1,11 @@
+/Users/haozhao/Desktop/Programming/ai-anki-converter/src-tauri/target/release/deps/libtoml_write-a4ddb9422662cf66.rmeta: /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_write-0.1.2/src/lib.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_write-0.1.2/src/key.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_write-0.1.2/src/string.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_write-0.1.2/src/value.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_write-0.1.2/src/write.rs
+
+/Users/haozhao/Desktop/Programming/ai-anki-converter/src-tauri/target/release/deps/libtoml_write-a4ddb9422662cf66.rlib: /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_write-0.1.2/src/lib.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_write-0.1.2/src/key.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_write-0.1.2/src/string.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_write-0.1.2/src/value.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_write-0.1.2/src/write.rs
+
+/Users/haozhao/Desktop/Programming/ai-anki-converter/src-tauri/target/release/deps/toml_write-a4ddb9422662cf66.d: /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_write-0.1.2/src/lib.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_write-0.1.2/src/key.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_write-0.1.2/src/string.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_write-0.1.2/src/value.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_write-0.1.2/src/write.rs
+
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_write-0.1.2/src/lib.rs:
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_write-0.1.2/src/key.rs:
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_write-0.1.2/src/string.rs:
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_write-0.1.2/src/value.rs:
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_write-0.1.2/src/write.rs:

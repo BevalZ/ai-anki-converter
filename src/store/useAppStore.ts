@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { aiService } from '@/services/aiService';
+import { keyManagementService } from '@/services/keyManagementService';
 import { toast } from 'sonner';
 
 export interface AnkiCard {
@@ -20,6 +21,10 @@ export interface LLMProvider {
   models: string[];
   selectedModel?: string;
   description: string;
+  isValidated?: boolean;
+  validationError?: string;
+  isValidating?: boolean;
+  lastConfigured?: number;
 }
 
 export interface LocaleSettings {
@@ -70,6 +75,9 @@ interface AppState {
   isProcessing: boolean;
   currentPage: string;
   
+  // Key Management State
+  isInitialized: boolean;
+  
   // Actions
   setInputText: (text: string) => void;
   setProcessedText: (text: string) => void;
@@ -100,6 +108,13 @@ interface AppState {
   setProviderSelectedModel: (providerId: string, model: string) => void;
   setCurrentPage: (page: string) => void;
   setLocale: (locale: SupportedLocale) => void;
+  
+  // Intelligent Key Management
+  validateApiKey: (providerId: string) => Promise<void>;
+  updateProviderApiKey: (providerId: string, apiKey: string) => Promise<void>;
+  loadStoredConfigurations: () => Promise<void>;
+  prioritizeProvider: (providerId: string) => void;
+  initializeApp: () => Promise<void>;
   
   // AI Functions
   generateCards: (text: string, type: AnkiCard['type'], difficulty: AnkiCard['difficulty'], maxCards: number, silent?: boolean) => Promise<void>;
@@ -175,6 +190,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   locale: 'zh-CN',
   isProcessing: false,
   currentPage: 'home',
+  isInitialized: false,
   
   // Text actions
   setInputText: (text) => set({ inputText: text }),
@@ -503,6 +519,171 @@ export const useAppStore = create<AppState>((set, get) => ({
       toast.error('Failed to retrieve models');
     } finally {
       set({ isProcessing: false });
+    }
+  },
+
+  // Intelligent Key Management Functions
+  validateApiKey: async (providerId) => {
+    const state = get();
+    const provider = state.llmProviders.find(p => p.id === providerId);
+    
+    if (!provider || !provider.apiKey) {
+      return;
+    }
+
+    // Set validating state
+    set((state) => ({
+      llmProviders: state.llmProviders.map(p => 
+        p.id === providerId 
+          ? { ...p, isValidating: true, validationError: undefined }
+          : p
+      )
+    }));
+
+    try {
+      const result = await keyManagementService.validateApiKey(provider);
+      
+      if (result.isValid) {
+        // Update provider with validation success and discovered models
+        set((state) => ({
+          llmProviders: state.llmProviders.map(p => 
+            p.id === providerId 
+              ? { 
+                  ...p, 
+                  isValidated: true, 
+                  isValidating: false,
+                  validationError: undefined,
+                  models: result.models || p.models,
+                  selectedModel: result.models?.[0] || p.selectedModel
+                }
+              : p
+          )
+        }));
+        
+        // Store configuration
+        await keyManagementService.storeProviderConfig(provider, result.models);
+        
+        // Prioritize this provider
+        get().prioritizeProvider(providerId);
+        
+        toast.success(`${provider.name} API key validated successfully!`);
+      } else {
+        // Update provider with validation error
+        set((state) => ({
+          llmProviders: state.llmProviders.map(p => 
+            p.id === providerId 
+              ? { 
+                  ...p, 
+                  isValidated: false, 
+                  isValidating: false,
+                  validationError: result.error
+                }
+              : p
+          )
+        }));
+        
+        toast.error(`${provider.name}: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Validation error:', error);
+      
+      set((state) => ({
+        llmProviders: state.llmProviders.map(p => 
+          p.id === providerId 
+            ? { 
+                ...p, 
+                isValidated: false, 
+                isValidating: false,
+                validationError: 'Validation failed'
+              }
+            : p
+        )
+      }));
+      
+      toast.error(`Failed to validate ${provider.name} API key`);
+    }
+  },
+
+  updateProviderApiKey: async (providerId, apiKey) => {
+    // Update provider with new API key
+    set((state) => ({
+      llmProviders: state.llmProviders.map(p => 
+        p.id === providerId 
+          ? { 
+              ...p, 
+              apiKey, 
+              isValidated: undefined,
+              validationError: undefined,
+              lastConfigured: Date.now()
+            }
+          : p
+      )
+    }));
+
+    // Auto-validate if API key is provided
+    if (apiKey.trim()) {
+      await get().validateApiKey(providerId);
+    }
+  },
+
+  loadStoredConfigurations: async () => {
+    try {
+      const configs = await keyManagementService.loadAllConfigurations();
+      
+      set((state) => ({
+        llmProviders: state.llmProviders.map(provider => {
+          const config = configs[provider.id];
+          if (config) {
+            return {
+              ...provider,
+              apiKey: config.apiKey,
+              models: config.models.length > 0 ? config.models : provider.models,
+              selectedModel: config.selectedModel || config.models[0] || provider.selectedModel,
+              isValidated: true // Assume stored configs are valid
+            };
+          }
+          return provider;
+        })
+      }));
+
+      // Set the last configured provider as selected
+      const lastConfigured = keyManagementService.getLastConfiguredProvider();
+      if (lastConfigured) {
+        set({ selectedProvider: lastConfigured });
+      }
+    } catch (error) {
+      console.error('Failed to load stored configurations:', error);
+    }
+  },
+
+  prioritizeProvider: (providerId) => {
+    const state = get();
+    const provider = state.llmProviders.find(p => p.id === providerId);
+    
+    if (!provider) return;
+
+    // Update last configured timestamp
+    set((state) => ({
+      llmProviders: state.llmProviders.map(p => 
+        p.id === providerId 
+          ? { ...p, lastConfigured: Date.now() }
+          : p
+      )
+    }));
+
+    // Set as selected provider
+    set({ selectedProvider: providerId });
+  },
+
+  initializeApp: async () => {
+    if (get().isInitialized) return;
+    
+    try {
+      await get().loadStoredConfigurations();
+      set({ isInitialized: true });
+    } catch (error) {
+      console.error('Failed to initialize app:', error);
+      set({ isInitialized: true }); // Set as initialized even if loading fails
     }
   }
 }));

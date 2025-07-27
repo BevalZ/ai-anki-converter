@@ -87,6 +87,13 @@ export const translations = {
     maxCardsPerGeneration: 'Max Cards Per Generation',
     enableAIEnhancements: 'Enable AI Enhancements',
     
+    // API Key Validation
+    validating: 'Validating...',
+    validated: 'Validated',
+    validationFailed: 'Validation Failed',
+    revalidate: 'Revalidate',
+    recentlyConfigured: 'Recently Configured',
+    
     // Card Editor
     cardEditorTitle: 'Card Editor',
     cardEditorSubtitle: 'Edit your flashcards, enhance them with AI, or perform bulk operations.',
@@ -384,6 +391,13 @@ export const translations = {
     defaultDifficulty: '默认难度',
     maxCardsPerGeneration: '每次生成最大卡片数',
     enableAIEnhancements: '启用AI增强',
+    
+    // API Key Validation
+    validating: '验证中...',
+    validated: '已验证',
+    validationFailed: '验证失败',
+    revalidate: '重新验证',
+    recentlyConfigured: '最近配置',
     
     // Card Editor
     cardEditorTitle: '卡片编辑器',

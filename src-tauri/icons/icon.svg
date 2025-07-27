@@ -1,0 +1,7 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="128" height="128" rx="16" fill="#3B82F6"/>
+  <path d="M32 40h64v8H32v-8zm0 16h64v8H32v-8zm0 16h48v8H32v-8z" fill="white"/>
+  <circle cx="88" cy="80" r="12" fill="#10B981"/>
+  <path d="M84 80l3 3 6-6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="64" y="110" text-anchor="middle" fill="white" font-family="Arial" font-size="12" font-weight="bold">Anki</text>
+</svg>

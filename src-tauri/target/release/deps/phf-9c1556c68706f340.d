@@ -1,0 +1,11 @@
+/Users/haozhao/Desktop/Programming/ai-anki-converter/src-tauri/target/release/deps/libphf-9c1556c68706f340.rmeta: /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/phf-0.10.1/src/lib.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/phf-0.10.1/src/map.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/phf-0.10.1/src/ordered_map.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/phf-0.10.1/src/ordered_set.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/phf-0.10.1/src/set.rs
+
+/Users/haozhao/Desktop/Programming/ai-anki-converter/src-tauri/target/release/deps/libphf-9c1556c68706f340.rlib: /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/phf-0.10.1/src/lib.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/phf-0.10.1/src/map.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/phf-0.10.1/src/ordered_map.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/phf-0.10.1/src/ordered_set.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/phf-0.10.1/src/set.rs
+
+/Users/haozhao/Desktop/Programming/ai-anki-converter/src-tauri/target/release/deps/phf-9c1556c68706f340.d: /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/phf-0.10.1/src/lib.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/phf-0.10.1/src/map.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/phf-0.10.1/src/ordered_map.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/phf-0.10.1/src/ordered_set.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/phf-0.10.1/src/set.rs
+
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/phf-0.10.1/src/lib.rs:
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/phf-0.10.1/src/map.rs:
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/phf-0.10.1/src/ordered_map.rs:
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/phf-0.10.1/src/ordered_set.rs:
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/phf-0.10.1/src/set.rs:

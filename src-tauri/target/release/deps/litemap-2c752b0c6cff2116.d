@@ -1,0 +1,11 @@
+/Users/haozhao/Desktop/Programming/ai-anki-converter/src-tauri/target/release/deps/liblitemap-2c752b0c6cff2116.rmeta: /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/litemap-0.8.0/src/lib.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/litemap-0.8.0/src/map.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/litemap-0.8.0/src/store/mod.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/litemap-0.8.0/src/store/slice_impl.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/litemap-0.8.0/src/store/vec_impl.rs
+
+/Users/haozhao/Desktop/Programming/ai-anki-converter/src-tauri/target/release/deps/liblitemap-2c752b0c6cff2116.rlib: /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/litemap-0.8.0/src/lib.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/litemap-0.8.0/src/map.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/litemap-0.8.0/src/store/mod.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/litemap-0.8.0/src/store/slice_impl.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/litemap-0.8.0/src/store/vec_impl.rs
+
+/Users/haozhao/Desktop/Programming/ai-anki-converter/src-tauri/target/release/deps/litemap-2c752b0c6cff2116.d: /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/litemap-0.8.0/src/lib.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/litemap-0.8.0/src/map.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/litemap-0.8.0/src/store/mod.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/litemap-0.8.0/src/store/slice_impl.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/litemap-0.8.0/src/store/vec_impl.rs
+
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/litemap-0.8.0/src/lib.rs:
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/litemap-0.8.0/src/map.rs:
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/litemap-0.8.0/src/store/mod.rs:
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/litemap-0.8.0/src/store/slice_impl.rs:
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/litemap-0.8.0/src/store/vec_impl.rs:

@@ -1,0 +1,11 @@
+cargo:rerun-if-changed=permissions
+cargo:PERMISSION_FILES_PATH=/Users/haozhao/Desktop/Programming/ai-anki-converter/src-tauri/target/release/build/tauri-plugin-shell-b6b7d446fbefa13c/out/tauri-plugin-shell-permission-files
+cargo:rerun-if-env-changed=REMOVE_UNUSED_COMMANDS
+cargo:GLOBAL_SCOPE_SCHEMA_PATH=/Users/haozhao/Desktop/Programming/ai-anki-converter/src-tauri/target/release/build/tauri-plugin-shell-b6b7d446fbefa13c/out/global-scope.json
+cargo:GLOBAL_API_SCRIPT_PATH=/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tauri-plugin-shell-2.3.0/api-iife.js
+cargo:rustc-check-cfg=cfg(mobile)
+cargo:rustc-check-cfg=cfg(desktop)
+cargo:rustc-cfg=desktop
+cargo:rustc-check-cfg=cfg(desktop)
+cargo:rustc-cfg=desktop
+cargo:rustc-check-cfg=cfg(mobile)

@@ -1,0 +1,12 @@
+/Users/haozhao/Desktop/Programming/ai-anki-converter/src-tauri/target/release/deps/libico-5008b68f38a80988.rmeta: /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ico-0.4.0/src/lib.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ico-0.4.0/src/macros.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ico-0.4.0/src/bmpdepth.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ico-0.4.0/src/icondir.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ico-0.4.0/src/image.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ico-0.4.0/src/restype.rs
+
+/Users/haozhao/Desktop/Programming/ai-anki-converter/src-tauri/target/release/deps/libico-5008b68f38a80988.rlib: /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ico-0.4.0/src/lib.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ico-0.4.0/src/macros.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ico-0.4.0/src/bmpdepth.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ico-0.4.0/src/icondir.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ico-0.4.0/src/image.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ico-0.4.0/src/restype.rs
+
+/Users/haozhao/Desktop/Programming/ai-anki-converter/src-tauri/target/release/deps/ico-5008b68f38a80988.d: /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ico-0.4.0/src/lib.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ico-0.4.0/src/macros.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ico-0.4.0/src/bmpdepth.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ico-0.4.0/src/icondir.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ico-0.4.0/src/image.rs /Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ico-0.4.0/src/restype.rs
+
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ico-0.4.0/src/lib.rs:
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ico-0.4.0/src/macros.rs:
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ico-0.4.0/src/bmpdepth.rs:
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ico-0.4.0/src/icondir.rs:
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ico-0.4.0/src/image.rs:
+/Users/haozhao/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ico-0.4.0/src/restype.rs:
