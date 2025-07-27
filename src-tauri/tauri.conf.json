@@ -36,11 +36,5 @@
       "csp": null
     }
   },
-  "plugins": {},
-  "mobile": {
-    "android": {
-      "allowedDomains": [],
-      "backgroundColor": "#ffffff"
-    }
-  }
+  "plugins": {}
 }
