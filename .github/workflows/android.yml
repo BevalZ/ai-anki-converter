@@ -33,6 +33,7 @@ jobs:
         run: |
           sdkmanager "ndk;25.0.8775105"
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.0.8775105" >> $GITHUB_ENV
+          echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.0.8775105" >> $GITHUB_ENV
 
       - name: Rust setup
         uses: dtolnay/rust-toolchain@stable
