@@ -189,7 +189,65 @@ npm run build
 
 # 预览生产版本
 npm run preview
+
+# Tauri 桌面应用开发
+npm run tauri:dev
+
+# 构建 Tauri 桌面应用
+npm run tauri:build
 ```
+
+## 📦 自动构建与发布
+
+本项目使用 GitHub Actions 实现多平台自动构建，支持以下平台：
+
+### 🖥️ 桌面端
+- **Windows**: `.msi` 和 `.exe` 安装包
+- **macOS**: `.dmg` 安装包 (支持 Intel 和 Apple Silicon)
+- **Linux**: `.AppImage` 和 `.deb` 包
+
+### 📱 移动端
+- **Android**: `.apk` 安装包
+
+### 🚀 发布新版本
+
+#### 方法一：使用发布脚本（推荐）
+```bash
+# Linux/macOS
+./scripts/release.sh
+
+# Windows
+scripts\release.bat
+```
+
+#### 方法二：手动发布
+1. 更新版本号
+   ```bash
+   npm version patch  # 或 minor, major
+   ```
+
+2. 更新 Tauri 配置
+   ```bash
+   # 手动编辑 src-tauri/tauri.conf.json 中的版本号
+   # 手动编辑 src-tauri/Cargo.toml 中的版本号
+   ```
+
+3. 创建并推送标签
+   ```bash
+   git add .
+   git commit -m "chore: bump version to v1.0.0"
+   git tag v1.0.0
+   git push origin main
+   git push origin v1.0.0
+   ```
+
+### 📋 构建状态
+
+- **持续集成**: 每次推送到 `main` 分支都会触发构建测试
+- **发布构建**: 推送 Git 标签（如 `v1.0.0`）会触发正式发布构建
+- **手动构建**: 可在 GitHub Actions 页面手动触发构建
+
+查看详细的发布指南：[.github/RELEASE_GUIDE.md](.github/RELEASE_GUIDE.md)
 
 ## 🤝 贡献指南
 
