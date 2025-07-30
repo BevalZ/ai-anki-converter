@@ -59,7 +59,13 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
-      - name: Build the app
+      - name: Set signing environment variables
+        if: matrix.platform == 'macos-latest'
+        run: |
+          echo "APPLE_CERTIFICATE_EXISTS=${{ secrets.APPLE_CERTIFICATE != '' }}" >> $GITHUB_ENV
+
+      - name: Build the app (with signing)
+        if: matrix.platform == 'macos-latest' && env.APPLE_CERTIFICATE_EXISTS == 'true'
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -88,6 +94,33 @@ jobs:
             ### 🐛 问题反馈
             
             如果遇到问题，请在 [Issues](https://github.com/${{ github.repository }}/issues) 中反馈。
-          releaseDraft: true
+          releaseDraft: false
+          prerelease: false
+          args: ${{ matrix.args }}
+
+      - name: Build the app (without signing)
+        if: matrix.platform != 'macos-latest' || env.APPLE_CERTIFICATE_EXISTS != 'true'
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.event.inputs.version || github.ref_name }}
+          releaseName: 'CodeCA ${{ github.event.inputs.version || github.ref_name }}'
+          releaseBody: |
+            ## 🚀 CodeCA ${{ github.event.inputs.version || github.ref_name }}
+            
+            ### 📦 下载安装包
+            
+            - **macOS**: 下载 `.dmg` 文件 (支持 Intel 和 Apple Silicon)
+            - **Linux**: 下载 `.AppImage` 或 `.deb` 文件
+            
+            ### ✨ 更新内容
+            
+            请查看 [更新日志](https://github.com/${{ github.repository }}/releases) 了解详细更新内容。
+            
+            ### 🐛 问题反馈
+            
+            如果遇到问题，请在 [Issues](https://github.com/${{ github.repository }}/issues) 中反馈。
+          releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
