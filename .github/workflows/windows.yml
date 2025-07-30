@@ -58,5 +58,6 @@ jobs:
             ### 🐛 问题反馈
             
             如果遇到问题，请在 [Issues](https://github.com/${{ github.repository }}/issues) 中反馈。
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
+          includeUpdaterJson: true
