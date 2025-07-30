@@ -1,0 +1,290 @@
+name: Build All Platforms
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: false
+        type: string
+
+jobs:
+  # Windows Build
+  build-windows:
+    permissions:
+      contents: write
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Rust setup
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build Windows app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.event.inputs.version || github.ref_name }}
+          releaseName: '🚀 CodeCA ${{ github.event.inputs.version || github.ref_name }}'
+          releaseBody: 'Building Windows packages...'
+          releaseDraft: true
+          prerelease: false
+          includeUpdaterJson: true
+
+  # Desktop Build (macOS & Linux)
+  build-desktop:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'macos-latest'
+            args: '--target aarch64-apple-darwin'
+            name: 'macos-arm64'
+          - platform: 'macos-latest'
+            args: '--target x86_64-apple-darwin'
+            name: 'macos-x64'
+          - platform: 'ubuntu-22.04'
+            args: ''
+            name: 'linux-x64'
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Rust setup
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Set signing environment variables
+        if: matrix.platform == 'macos-latest'
+        run: |
+          echo "APPLE_CERTIFICATE_EXISTS=${{ secrets.APPLE_CERTIFICATE != '' }}" >> $GITHUB_ENV
+
+      - name: Build the app (with signing)
+        if: matrix.platform == 'macos-latest' && env.APPLE_CERTIFICATE_EXISTS == 'true'
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ENABLE_CODE_SIGNING: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        with:
+          tagName: ${{ github.event.inputs.version || github.ref_name }}
+          releaseName: '🚀 CodeCA ${{ github.event.inputs.version || github.ref_name }}'
+          releaseBody: 'Building desktop packages...'
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}
+
+      - name: Build the app (without signing)
+        if: matrix.platform != 'macos-latest' || env.APPLE_CERTIFICATE_EXISTS != 'true'
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.event.inputs.version || github.ref_name }}
+          releaseName: '🚀 CodeCA ${{ github.event.inputs.version || github.ref_name }}'
+          releaseBody: 'Building desktop packages...'
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}
+
+  # Android Build
+  build-android:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android NDK
+        run: |
+          sdkmanager "ndk;25.0.8775105"
+          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.0.8775105" >> $GITHUB_ENV
+          echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.0.8775105" >> $GITHUB_ENV
+
+      - name: Rust setup
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: 'aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android'
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Install Tauri CLI
+        run: |
+          npm install --save-dev @tauri-apps/cli@latest
+          npx tauri --version
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Initialize Tauri Android
+        run: |
+          if [ ! -d "src-tauri/gen/android" ]; then
+            npx tauri android init
+          else
+            echo "Android project already initialized"
+          fi
+
+      - name: Build Android APK
+        run: npx tauri android build --apk --verbose
+
+      - name: Set signing key environment variable
+        run: echo "SIGNING_KEY=${{ secrets.SIGNING_KEY }}" >> $GITHUB_ENV
+
+      - name: Sign Android APK (optional)
+        if: ${{ env.SIGNING_KEY != '' }}
+        uses: r0adkll/sign-android-release@v1
+        id: sign_app
+        with:
+          releaseDirectory: src-tauri/gen/android/app/build/outputs/apk/universal/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Rename signed APK
+        if: ${{ env.SIGNING_KEY != '' }}
+        run: |
+          if [ -f "${{ steps.sign_app.outputs.signedReleaseFile }}" ]; then
+            mv "${{ steps.sign_app.outputs.signedReleaseFile }}" "CodeCA_${{ github.ref_name }}.apk"
+          fi
+
+      - name: Rename unsigned APK
+        if: ${{ env.SIGNING_KEY == '' }}
+        run: |
+          APK_FILE=$(find src-tauri/gen/android -name "*.apk" -type f | head -1)
+          if [ -f "$APK_FILE" ]; then
+            mv "$APK_FILE" "CodeCA_${{ github.ref_name }}.apk"
+          fi
+
+      - name: Upload APK to existing release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "*.apk"
+          token: ${{ github.token }}
+          allowUpdates: true
+          updateOnlyUnreleased: false
+          name: '🚀 CodeCA ${{ github.event.inputs.version || github.ref_name }}'
+          tag: ${{ github.event.inputs.version || github.ref_name }}
+          body: |
+            ## 🚀 CodeCA ${{ github.event.inputs.version || github.ref_name }}
+            
+            ### 📦 下载安装包
+            
+            - **Windows**: 下载 `.msi` 或 `.exe` 文件
+            - **macOS**: 下载 `.dmg` 文件 (支持 Intel 和 Apple Silicon)
+            - **Linux**: 下载 `.AppImage` 或 `.deb` 文件
+            - **Android**: 下载 `.apk` 文件
+            
+            ### ✨ 更新内容
+            
+            请查看 [更新日志](https://github.com/${{ github.repository }}/releases) 了解详细更新内容。
+            
+            ### 🐛 问题反馈
+            
+            如果遇到问题，请在 [Issues](https://github.com/${{ github.repository }}/issues) 中反馈。
+          draft: false
+
+  # Finalize Release
+  finalize-release:
+    needs: [build-windows, build-desktop, build-android]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Finalize and publish release
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ github.token }}
+          allowUpdates: true
+          updateOnlyUnreleased: false
+          name: '🚀 CodeCA ${{ github.event.inputs.version || github.ref_name }}'
+          tag: ${{ github.event.inputs.version || github.ref_name }}
+          body: |
+            ## 🚀 CodeCA ${{ github.event.inputs.version || github.ref_name }}
+            
+            ### 📦 下载安装包
+            
+            - **Windows**: 下载 `.msi` 或 `.exe` 文件
+            - **macOS**: 下载 `.dmg` 文件 (支持 Intel 和 Apple Silicon)
+            - **Linux**: 下载 `.AppImage` 或 `.deb` 文件
+            - **Android**: 下载 `.apk` 文件
+            
+            ### ✨ 更新内容
+            
+            请查看 [更新日志](https://github.com/${{ github.repository }}/releases) 了解详细更新内容。
+            
+            ### 🐛 问题反馈
+            
+            如果遇到问题，请在 [Issues](https://github.com/${{ github.repository }}/issues) 中反馈。
+          draft: false

@@ -3,7 +3,7 @@ name: Release Android APK
 on:
   push:
     tags:
-      - "v1.0.0"
+      - "v*"
   workflow_dispatch:
     inputs:
       version:
