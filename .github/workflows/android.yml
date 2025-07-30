@@ -79,8 +79,11 @@ jobs:
           find src-tauri/gen/android -name "*.apk" -type f || echo "No APK files found"
           ls -la src-tauri/gen/android/app/build/outputs/apk/ || echo "APK output directory not found"
 
+      - name: Set signing key environment variable
+        run: echo "SIGNING_KEY=${{ secrets.SIGNING_KEY }}" >> $GITHUB_ENV
+
       - name: Sign Android APK (optional)
-        if: ${{ secrets.SIGNING_KEY != '' }}
+        if: ${{ env.SIGNING_KEY != '' }}
         uses: r0adkll/sign-android-release@v1
         id: sign_app
         with:
@@ -91,14 +94,14 @@ jobs:
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
       - name: Rename signed APK
-        if: ${{ secrets.SIGNING_KEY != '' }}
+        if: ${{ env.SIGNING_KEY != '' }}
         run: |
           if [ -f "${{ steps.sign_app.outputs.signedReleaseFile }}" ]; then
             mv "${{ steps.sign_app.outputs.signedReleaseFile }}" "CodeCA_${{ github.ref_name }}.apk"
           fi
 
       - name: Rename unsigned APK
-        if: ${{ secrets.SIGNING_KEY == '' }}
+        if: ${{ env.SIGNING_KEY == '' }}
         run: |
           APK_FILE=$(find src-tauri/gen/android -name "*.apk" -type f | head -1)
           if [ -f "$APK_FILE" ]; then
