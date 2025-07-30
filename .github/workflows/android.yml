@@ -1,21 +1,21 @@
-name: Build Android APK
+name: Release Android APK
 
 on:
   push:
     tags:
-      - 'v*'
+      - "v1.0.0"
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release version (e.g., v1.0.0)'
+        description: 'Release version v1.0.0'
         required: false
         type: string
 
 jobs:
-  build-android:
+  build:
+    runs-on: ubuntu-latest
     permissions:
       contents: write
-    runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -73,20 +73,50 @@ jobs:
       - name: Build Android APK
         run: npx tauri android build --apk --verbose
 
+      - name: List APK files for debugging
+        run: |
+          echo "Looking for APK files..."
+          find src-tauri/gen/android -name "*.apk" -type f || echo "No APK files found"
+          ls -la src-tauri/gen/android/app/build/outputs/apk/ || echo "APK output directory not found"
+
+      - name: Sign Android APK (optional)
+        if: ${{ secrets.SIGNING_KEY != '' }}
+        uses: r0adkll/sign-android-release@v1
+        id: sign_app
+        with:
+          releaseDirectory: src-tauri/gen/android/app/build/outputs/apk/universal/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Rename signed APK
+        if: ${{ secrets.SIGNING_KEY != '' }}
+        run: |
+          if [ -f "${{ steps.sign_app.outputs.signedReleaseFile }}" ]; then
+            mv "${{ steps.sign_app.outputs.signedReleaseFile }}" "CodeCA_${{ github.ref_name }}.apk"
+          fi
+
+      - name: Rename unsigned APK
+        if: ${{ secrets.SIGNING_KEY == '' }}
+        run: |
+          APK_FILE=$(find src-tauri/gen/android -name "*.apk" -type f | head -1)
+          if [ -f "$APK_FILE" ]; then
+            mv "$APK_FILE" "CodeCA_${{ github.ref_name }}.apk"
+          fi
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: |
-            src-tauri/gen/android/app/build/outputs/apk/universal/release/*.apk
+          path: "*.apk"
 
-      - name: Create Release (if tag)
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v1
+      - name: Create Release
+        uses: ncipollo/release-action@v1
         with:
-          tag_name: ${{ github.event.inputs.version || github.ref_name }}
+          artifacts: "*.apk"
+          token: ${{ github.token }}
+          generateReleaseNotes: true
           name: 'CodeCA ${{ github.event.inputs.version || github.ref_name }}'
-          files: src-tauri/gen/android/app/build/outputs/apk/universal/release/*.apk
-          draft: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.event.inputs.version || github.ref_name }}
+          draft: false
