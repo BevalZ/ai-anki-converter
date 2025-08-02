@@ -177,27 +177,17 @@ function createCardElement(card: Card, isBack: boolean = false): HTMLElement {
   
   cardElement.style.cssText = `
     width: 400px;
-    min-height: 256px;
     background-color: ${backgroundColor};
     border: 2px solid ${borderColor};
     border-radius: 8px;
-    padding: 24px;
+    padding: 20px;
+    padding-bottom: 24px;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
     font-family: Arial, sans-serif;
     position: relative;
     box-sizing: border-box;
     margin: 0;
-  `;
-
-  const contentWrapper = document.createElement('div');
-  contentWrapper.style.cssText = `
-    text-align: center;
-    width: 100%;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    line-height: 1.6;
   `;
 
   const titleElement = document.createElement('div');
@@ -206,46 +196,90 @@ function createCardElement(card: Card, isBack: boolean = false): HTMLElement {
     color: ${isBack ? '#16a34a' : '#2563eb'};
     font-weight: bold;
     margin-bottom: 12px;
+    text-align: center;
     font-family: Arial, sans-serif;
+    flex-shrink: 0;
   `;
   titleElement.textContent = isBack ? '背面' : '正面';
 
   const contentElement = document.createElement('div');
   contentElement.style.cssText = `
     color: #111827;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 500;
-    word-break: break-words;
-    line-height: 1.6;
+    line-height: 1.5;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
     font-family: Arial, sans-serif;
+    flex: 1;
+    min-height: 0;
   `;
 
-  // Handle content rendering - simplified for better html2canvas compatibility
+  // Handle content rendering with optimized spacing and layout
   if (isBack) {
-    // Simple text processing for back content
-    let processedContent = card.back
-      // Remove HTML tags for now
-      .replace(/<[^>]*>/g, '')
-      // Convert markdown to plain text
-      .replace(/\*\*(.*?)\*\*/g, '$1')
-      .replace(/\*(.*?)\*/g, '$1')
-      .replace(/`(.*?)`/g, '$1')
-      .replace(/```[\s\S]*?```/g, (match) => {
-        return match.replace(/```(\w+)?\n?/, '').replace(/```$/, '');
-      })
-      // Convert line breaks
-      .replace(/\n/g, ' ')
-      .trim();
+    // Enhanced processing for back content with basic HTML support
+    let processedContent = card.back;
     
-    contentElement.textContent = processedContent;
+    // Check if content has HTML or markdown
+    const hasFormatting = /<[^>]*>|```|\*\*|__|\[.*\]\(.*\)|#{1,6}\s/.test(processedContent);
+    
+    if (hasFormatting) {
+      // Create a content container for formatted content
+      const formattedContainer = document.createElement('div');
+      formattedContainer.style.cssText = `
+        width: 100%;
+        text-align: left;
+        line-height: 1.4;
+        font-size: 15px;
+      `;
+      
+      // Optimized HTML/Markdown processing with reduced spacing
+      processedContent = processedContent
+        // Headers with reduced margins
+        .replace(/^### (.*$)/gm, '<h3 style="font-size: 15px; font-weight: 600; color: #8b5cf6; margin: 6px 0 3px 0;">$1</h3>')
+        .replace(/^## (.*$)/gm, '<h2 style="font-size: 16px; font-weight: 600; color: #2563eb; margin: 8px 0 4px 0;">$1</h2>')
+        .replace(/^# (.*$)/gm, '<h1 style="font-size: 17px; font-weight: bold; color: #111827; margin: 8px 0 4px 0; border-bottom: 2px solid #2563eb; padding-bottom: 2px;">$1</h1>')
+        // Bold text
+        .replace(/\*\*(.*?)\*\*/g, '<strong style="font-weight: bold; color: #1e40af; background-color: #dbeafe; padding: 1px 3px; border-radius: 2px;">$1</strong>')
+        // Italic text
+        .replace(/\*(.*?)\*/g, '<em style="font-style: italic; color: #8b5cf6; font-weight: 500;">$1</em>')
+        // Inline code
+        .replace(/`(.*?)`/g, '<code style="background-color: #f3f4f6; color: #dc2626; padding: 1px 4px; border-radius: 2px; font-family: monospace; font-size: 13px; border: 1px solid #e5e7eb;">$1</code>')
+        // Code blocks with reduced padding
+        .replace(/```[\s\S]*?```/g, (match) => {
+          const codeContent = match.replace(/```(\w+)?\n?/, '').replace(/```$/, '');
+          return `<pre style="background-color: #1f2937; color: #f9fafb; padding: 8px; border-radius: 4px; margin: 4px 0; font-family: monospace; font-size: 12px; line-height: 1.3; overflow-x: auto;">${codeContent}</pre>`;
+        })
+        // Lists with reduced spacing
+        .replace(/^- (.*$)/gm, '<li style="margin: 1px 0; line-height: 1.3;">$1</li>')
+        .replace(/(<li.*?<\/li>\s*)+/g, '<ul style="margin: 3px 0; padding-left: 16px;">$&</ul>')
+        // Blockquotes with reduced padding
+        .replace(/^> (.*$)/gm, '<blockquote style="border-left: 3px solid #3b82f6; padding-left: 8px; margin: 4px 0; background-color: #eff6ff; padding: 4px 8px; border-radius: 0 4px 4px 0; font-style: italic; color: #374151; font-size: 14px;">$1</blockquote>')
+        // Optimized line breaks - reduce double spacing
+        .replace(/\n\n/g, '<div style="height: 6px;"></div>')
+        .replace(/\n/g, '<br>');
+      
+      formattedContainer.innerHTML = processedContent;
+      contentElement.appendChild(formattedContainer);
+    } else {
+      // Plain text content - center align for simple content
+      contentElement.style.textAlign = 'center';
+      contentElement.style.display = 'flex';
+      contentElement.style.alignItems = 'center';
+      contentElement.style.justifyContent = 'center';
+      contentElement.textContent = processedContent;
+    }
   } else {
-    // Front content is always simple text
+    // Front content is always simple text - center aligned
+    contentElement.style.textAlign = 'center';
+    contentElement.style.display = 'flex';
+    contentElement.style.alignItems = 'center';
+    contentElement.style.justifyContent = 'center';
     contentElement.textContent = card.front;
   }
 
-  contentWrapper.appendChild(titleElement);
-  contentWrapper.appendChild(contentElement);
-  cardElement.appendChild(contentWrapper);
+  cardElement.appendChild(titleElement);
+  cardElement.appendChild(contentElement);
 
   return cardElement;
 }
@@ -376,122 +410,137 @@ export async function exportCardAsImage(
   }
 }
 
-// Export multiple cards as images
+// Export multiple cards as images (each card as separate image in ZIP)
 export async function exportCardsAsImages(
   cards: Card[],
   options: ImageExportOptions = { format: 'png' },
   deckName: string = 'anki_cards'
 ): Promise<void> {
   try {
-    if (options.format === 'svg') {
-      // Create a combined SVG for all cards
-      const cardHeight = 260;
-      const totalHeight = cards.length * cardHeight;
-      
-      let combinedSVG = `<svg width="400" height="${totalHeight}" xmlns="http://www.w3.org/2000/svg">`;
-      
-      cards.forEach((card, index) => {
-        const frontSVG = createCardSVG(card, false);
-        const backSVG = createCardSVG(card, true);
-        const yOffset = index * cardHeight;
-        
-        combinedSVG += `
-          <g transform="translate(0, ${yOffset})">
-            ${frontSVG.replace('<svg width="400" height="250" xmlns="http://www.w3.org/2000/svg">', '').replace('</svg>', '')}
-          </g>
-          <g transform="translate(0, ${yOffset + 260})">
-            ${backSVG.replace('<svg width="400" height="250" xmlns="http://www.w3.org/2000/svg">', '').replace('</svg>', '')}
-          </g>
-        `;
-      });
-      
-      combinedSVG += '</svg>';
-      
-      const blob = new Blob([combinedSVG], { type: 'image/svg+xml' });
-      saveAs(blob, `${deckName}_${cards.length}.svg`);
-      return;
-    }
-
-    // Create container for all cards
-    const container = document.createElement('div');
-    container.style.cssText = `
-      background: white;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      width: 440px;
-      box-sizing: border-box;
-    `;
-
-    // Create card elements for each card
-    cards.forEach(card => {
-      const frontCard = createCardElement(card, false);
-      const backCard = createCardElement(card, true);
-      
-      container.appendChild(frontCard);
-      container.appendChild(backCard);
-      
-      // Add separator between cards (except for the last card)
-      if (cards.indexOf(card) < cards.length - 1) {
-        const separator = document.createElement('div');
-        separator.style.cssText = `
-          height: 1px;
-          background: rgb(229, 231, 235);
-          margin: 10px 0;
-        `;
-        container.appendChild(separator);
-      }
-    });
+    // Import JSZip dynamically
+    const JSZip = (await import('jszip')).default;
+    const zip = new JSZip();
     
-    // Temporarily add to DOM for rendering
-    container.style.position = 'absolute';
-    container.style.left = '-9999px';
-    container.style.top = '-9999px';
-    container.style.zIndex = '-1';
-    document.body.appendChild(container);
-
-    try {
-      // Wait for content to render and calculate actual dimensions
-      await new Promise(resolve => setTimeout(resolve, 200));
+    // Process each card individually
+    for (let i = 0; i < cards.length; i++) {
+      const card = cards[i];
       
-      const actualHeight = container.scrollHeight;
-      const actualWidth = container.scrollWidth;
-      
-      // Make sure container is visible for html2canvas
-      container.style.position = 'static';
-      container.style.left = 'auto';
-      container.style.top = 'auto';
-      container.style.zIndex = 'auto';
-      
-      // Generate image using html2canvas with dynamic dimensions
-      const canvas = await html2canvas(container, {
-        backgroundColor: '#ffffff',
-        scale: 2, // Higher resolution
-        useCORS: true,
-        allowTaint: true,
-        width: actualWidth,
-        height: actualHeight,
-        logging: false,
-        removeContainer: false
-      });
-
-      // Convert to blob and download
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const filename = `${deckName}_${cards.length}.${options.format}`;
-          saveAs(blob, filename);
+      try {
+        // Generate image for this card
+        const imageBlob = await generateSingleCardImage(card, options);
+        
+        if (imageBlob) {
+          // Create filename for this card
+          const cardName = card.front.substring(0, 30).replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_');
+          const filename = `${String(i + 1).padStart(3, '0')}_${cardName}.${options.format}`;
+          
+          // Add to ZIP
+          zip.file(filename, imageBlob);
         }
-      }, `image/${options.format}`, options.quality || 0.9);
-    } finally {
-      // Clean up
-      document.body.removeChild(container);
+      } catch (error) {
+        console.error(`Failed to export card ${i + 1}:`, error);
+        // Continue with other cards even if one fails
+      }
     }
+    
+    // Generate and download ZIP file
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    const zipFilename = `${deckName}_${cards.length}_cards.zip`;
+    saveAs(zipBlob, zipFilename);
 
   } catch (error) {
     console.error('Error exporting cards as images:', error);
     throw new Error('Failed to export cards as images');
   }
+}
+
+// Helper function to generate image for a single card
+async function generateSingleCardImage(
+  card: Card,
+  options: ImageExportOptions
+): Promise<Blob | null> {
+  return new Promise((resolve) => {
+    try {
+      if (options.format === 'svg') {
+        // Generate SVG for single card
+        const frontSVG = createCardSVG(card, false);
+        const backSVG = createCardSVG(card, true);
+        
+        const combinedSVG = `
+          <svg width="400" height="520" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(0, 0)">
+              ${frontSVG.replace('<svg width="400" height="250" xmlns="http://www.w3.org/2000/svg">', '').replace('</svg>', '')}
+            </g>
+            <g transform="translate(0, 260)">
+              ${backSVG.replace('<svg width="400" height="250" xmlns="http://www.w3.org/2000/svg">', '').replace('</svg>', '')}
+            </g>
+          </svg>
+        `;
+        
+        const blob = new Blob([combinedSVG], { type: 'image/svg+xml' });
+        resolve(blob);
+        return;
+      }
+
+      // Create container for single card (front and back)
+      const container = document.createElement('div');
+      container.style.cssText = `
+        background: white;
+        padding: 20px;
+        display: block;
+        width: 440px;
+        box-sizing: border-box;
+        font-family: Arial, sans-serif;
+      `;
+
+      // Create front and back card elements
+      const frontCard = createCardElement(card, false);
+      const backCard = createCardElement(card, true);
+      
+      // Add some spacing between cards
+      frontCard.style.marginBottom = '20px';
+      
+      container.appendChild(frontCard);
+      container.appendChild(backCard);
+      
+      // Add to DOM temporarily
+      container.style.position = 'fixed';
+      container.style.left = '0px';
+      container.style.top = '0px';
+      container.style.zIndex = '9999';
+      document.body.appendChild(container);
+
+      // Wait for rendering then capture
+      setTimeout(async () => {
+        try {
+          const canvas = await html2canvas(container, {
+            backgroundColor: '#ffffff',
+            scale: 1,
+            useCORS: true,
+            allowTaint: true,
+            logging: false,
+            removeContainer: false,
+            foreignObjectRendering: false
+          });
+
+          canvas.toBlob((blob) => {
+            // Clean up DOM
+            document.body.removeChild(container);
+            resolve(blob);
+          }, `image/${options.format}`, options.quality || 0.9);
+        } catch (error) {
+          // Clean up DOM on error
+          document.body.removeChild(container);
+          console.error('Error generating single card image:', error);
+          resolve(null);
+        }
+      }, 300);
+
+    } catch (error) {
+      console.error('Error in generateSingleCardImage:', error);
+      resolve(null);
+    }
+  });
 }
 
 // Create preview thumbnail for a card
