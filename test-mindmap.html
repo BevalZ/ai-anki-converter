@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>思维导图样式测试</title>
+    <style>
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8fafc;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #1f2937;
+            margin-bottom: 30px;
+        }
+        .mindmap-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 700px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: #ffffff;
+            overflow: auto;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .comparison-item {
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        .old-style {
+            background: #fef2f2;
+            border-color: #fecaca;
+        }
+        .new-style {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>优化后的思维导图样式预览</h1>
+        <div class="mindmap-container">
+            <svg width="1000" height="700" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <style>
+                        .mind-map-title { 
+                            font-family: 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif; 
+                            font-size: 18px; 
+                            font-weight: 600; 
+                            fill: #1f2937; 
+                            text-anchor: middle; 
+                        }
+                        .mind-map-node-1 { 
+                            font-family: 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif; 
+                            font-size: 14px; 
+                            font-weight: 500; 
+                            fill: #374151; 
+                            text-anchor: middle; 
+                        }
+                        .mind-map-node-2 { 
+                            font-family: 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif; 
+                            font-size: 12px; 
+                            font-weight: 400; 
+                            fill: #4b5563; 
+                            text-anchor: middle; 
+                        }
+                        .mind-map-line-purple { stroke: #a855f7; stroke-width: 3; fill: none; stroke-linecap: round; }
+                        .mind-map-line-blue { stroke: #3b82f6; stroke-width: 3; fill: none; stroke-linecap: round; }
+                        .mind-map-line-green { stroke: #10b981; stroke-width: 3; fill: none; stroke-linecap: round; }
+                        .mind-map-line-orange { stroke: #f59e0b; stroke-width: 3; fill: none; stroke-linecap: round; }
+                        
+                        .mind-map-bg-center { 
+                            fill: #ffffff; 
+                            stroke: #a855f7; 
+                            stroke-width: 3; 
+                            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+                        }
+                        .mind-map-bg-purple { 
+                            fill: #faf5ff; 
+                            stroke: #a855f7; 
+                            stroke-width: 2; 
+                            filter: drop-shadow(0 2px 4px rgba(168, 85, 247, 0.2));
+                        }
+                        .mind-map-bg-blue { 
+                            fill: #eff6ff; 
+                            stroke: #3b82f6; 
+                            stroke-width: 2; 
+                            filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.2));
+                        }
+                        .mind-map-bg-green { 
+                            fill: #ecfdf5; 
+                            stroke: #10b981; 
+                            stroke-width: 2; 
+                            filter: drop-shadow(0 2px 4px rgba(16, 185, 129, 0.2));
+                        }
+                        .mind-map-bg-orange { 
+                            fill: #fffbeb; 
+                            stroke: #f59e0b; 
+                            stroke-width: 2; 
+                            filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.2));
+                        }
+                    </style>
+                    <radialGradient id="bgGradient" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#f8fafc;stop-opacity:1" />
+                    </radialGradient>
+                </defs>
+                
+                <!-- 背景渐变 -->
+                <rect width="1000" height="700" fill="url(#bgGradient)" />
+                
+                <!-- 连接线 -->
+                <path d="M 500 350 Q 520 320 580 280" class="mind-map-line-purple" />
+                <path d="M 500 350 Q 480 280 420 280" class="mind-map-line-blue" />
+                <path d="M 500 350 Q 520 420 580 420" class="mind-map-line-green" />
+                <path d="M 500 350 Q 480 420 420 420" class="mind-map-line-orange" />
+                
+                <!-- 二级连接线 -->
+                <path d="M 580 280 Q 620 260 680 240" class="mind-map-line-purple" />
+                <path d="M 580 280 Q 620 300 680 320" class="mind-map-line-purple" />
+                <path d="M 420 280 Q 380 260 320 240" class="mind-map-line-blue" />
+                <path d="M 420 280 Q 380 300 320 320" class="mind-map-line-blue" />
+                
+                <!-- 中心节点 -->
+                <ellipse cx="500" cy="350" rx="80" ry="30" class="mind-map-bg-center" />
+                <text x="500" y="350" class="mind-map-title" dominant-baseline="middle">产品故事</text>
+                
+                <!-- 一级节点 -->
+                <rect x="540" y="260" width="80" height="40" rx="20" ry="20" class="mind-map-bg-purple" />
+                <text x="580" y="280" class="mind-map-node-1" dominant-baseline="middle">价值</text>
+                
+                <rect x="380" y="260" width="80" height="40" rx="20" ry="20" class="mind-map-bg-blue" />
+                <text x="420" y="280" class="mind-map-node-1" dominant-baseline="middle">使用场景</text>
+                
+                <rect x="540" y="400" width="80" height="40" rx="20" ry="20" class="mind-map-bg-green" />
+                <text x="580" y="420" class="mind-map-node-1" dominant-baseline="middle">愿景</text>
+                
+                <rect x="380" y="400" width="80" height="40" rx="20" ry="20" class="mind-map-bg-orange" />
+                <text x="420" y="420" class="mind-map-node-1" dominant-baseline="middle">功能</text>
+                
+                <!-- 二级节点 -->
+                <rect x="640" y="220" width="80" height="28" rx="14" ry="14" class="mind-map-bg-purple" />
+                <text x="680" y="234" class="mind-map-node-2" dominant-baseline="middle">释放团队想象力</text>
+                
+                <rect x="640" y="300" width="80" height="28" rx="14" ry="14" class="mind-map-bg-purple" />
+                <text x="680" y="314" class="mind-map-node-2" dominant-baseline="middle">提高办公效率</text>
+                
+                <rect x="280" y="220" width="80" height="28" rx="14" ry="14" class="mind-map-bg-blue" />
+                <text x="320" y="234" class="mind-map-node-2" dominant-baseline="middle">头脑风暴</text>
+                
+                <rect x="280" y="300" width="80" height="28" rx="14" ry="14" class="mind-map-bg-blue" />
+                <text x="320" y="314" class="mind-map-node-2" dominant-baseline="middle">项目计划分析</text>
+                
+                <!-- 更多二级节点 -->
+                <path d="M 580 420 Q 620 400 680 380" class="mind-map-line-green" />
+                <path d="M 580 420 Q 620 440 680 460" class="mind-map-line-green" />
+                <path d="M 420 420 Q 380 400 320 380" class="mind-map-line-orange" />
+                <path d="M 420 420 Q 380 440 320 460" class="mind-map-line-orange" />
+                
+                <rect x="640" y="360" width="80" height="28" rx="14" ry="14" class="mind-map-bg-green" />
+                <text x="680" y="374" class="mind-map-node-2" dominant-baseline="middle">创新软件</text>
+                
+                <rect x="640" y="440" width="80" height="28" rx="14" ry="14" class="mind-map-bg-green" />
+                <text x="680" y="454" class="mind-map-node-2" dominant-baseline="middle">协作平台</text>
+                
+                <rect x="280" y="360" width="80" height="28" rx="14" ry="14" class="mind-map-bg-orange" />
+                <text x="320" y="374" class="mind-map-node-2" dominant-baseline="middle">智能分析</text>
+                
+                <rect x="280" y="440" width="80" height="28" rx="14" ry="14" class="mind-map-bg-orange" />
+                <text x="320" y="454" class="mind-map-node-2" dominant-baseline="middle">数据可视化</text>
+            </svg>
+        </div>
+        
+        <div class="comparison">
+            <div class="comparison-item old-style">
+                <h3 style="color: #dc2626; margin-bottom: 10px;">🔴 原始样式问题</h3>
+                <ul style="color: #7f1d1d; line-height: 1.6; margin: 0; padding-left: 20px;">
+                    <li>所有连线都是灰色，缺乏层次感</li>
+                    <li>节点颜色单调，视觉区分度低</li>
+                    <li>直线连接，显得生硬</li>
+                    <li>没有阴影效果，缺乏立体感</li>
+                    <li>字体渲染不够优化</li>
+                </ul>
+            </div>
+            
+            <div class="comparison-item new-style">
+                <h3 style="color: #16a34a; margin-bottom: 10px;">✅ 新样式优化</h3>
+                <ul style="color: #14532d; line-height: 1.6; margin: 0; padding-left: 20px;">
+                    <li><strong>颜色分层：</strong> 不同分支使用不同颜色，提高视觉层次感</li>
+                    <li><strong>圆角设计：</strong> 中心节点椭圆形，其他节点圆角矩形</li>
+                    <li><strong>曲线连接：</strong> 贝塞尔曲线连接，更加优雅自然</li>
+                    <li><strong>阴影效果：</strong> 微妙阴影增强立体感</li>
+                    <li><strong>字体优化：</strong> 中文友好字体栈，提高可读性</li>
+                    <li><strong>渐变背景：</strong> 径向渐变提升整体视觉效果</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div style="margin-top: 30px; padding: 20px; background: #f3f4f6; border-radius: 8px; text-align: center;">
+            <h2 style="color: #1f2937; margin-bottom: 15px;">🎨 样式特色</h2>
+            <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 15px;">
+                <div style="background: #faf5ff; padding: 10px 15px; border-radius: 20px; border: 2px solid #a855f7;">
+                    <span style="color: #a855f7; font-weight: 600;">紫色分支</span>
+                </div>
+                <div style="background: #eff6ff; padding: 10px 15px; border-radius: 20px; border: 2px solid #3b82f6;">
+                    <span style="color: #3b82f6; font-weight: 600;">蓝色分支</span>
+                </div>
+                <div style="background: #ecfdf5; padding: 10px 15px; border-radius: 20px; border: 2px solid #10b981;">
+                    <span style="color: #10b981; font-weight: 600;">绿色分支</span>
+                </div>
+                <div style="background: #fffbeb; padding: 10px 15px; border-radius: 20px; border: 2px solid #f59e0b;">
+                    <span style="color: #f59e0b; font-weight: 600;">橙色分支</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
