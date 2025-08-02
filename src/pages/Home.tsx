@@ -358,14 +358,14 @@ export default function Home() {
                         </div>
                       </div>
                     )}
-                    <div className="flex flex-col space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-2 sm:space-y-0">
                       <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                         {processedText ? `${processedText.length} ${t('characters')}` : t('noContent')}
                       </span>
                       
                       {/* 新增的三个操作按钮 */}
-                      {processedText && (
-                        <div className="flex flex-col sm:flex-row gap-2">
+                      {processedText ? (
+                        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                           <button
                             onClick={backfillProcessedText}
                             className="flex items-center justify-center space-x-1 px-3 py-2 text-xs sm:text-sm bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-md hover:from-blue-600 hover:to-blue-700 transition-colors min-h-[44px] sm:min-h-0"
@@ -391,18 +391,24 @@ export default function Home() {
                             <Map className="h-4 w-4" />
                             <span>{t('mindMap')}</span>
                           </button>
+                          
+                          <button
+                            onClick={() => setProcessedText('')}
+                            disabled={!processedText}
+                            className="text-xs sm:text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed self-start sm:self-auto"
+                          >
+                            {t('clear')}
+                          </button>
                         </div>
-                      )}
-                      
-                      <div className="flex justify-end">
+                      ) : (
                         <button
                           onClick={() => setProcessedText('')}
                           disabled={!processedText}
-                          className="text-xs sm:text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="text-xs sm:text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed self-start sm:self-auto"
                         >
                           {t('clear')}
                         </button>
-                      </div>
+                      )}
                     </div>
                   </div>
                 )}
