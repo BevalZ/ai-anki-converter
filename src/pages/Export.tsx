@@ -141,40 +141,64 @@ export default function Export() {
     return content;
   };
 
-  // Clean content for CSV export - preserve HTML but fix CSV structure issues
-  const cleanForCSV = (content: string): string => {
-    return content
-      .replace(/\r?\n/g, ' ') // Replace newlines with spaces to prevent CSV row breaks
-      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
-      .trim() // Remove leading/trailing whitespace
-      .replace(/"/g, '""'); // Escape quotes for CSV format
+  // Format content as styled HTML div for Anki import
+  const formatAsStyledDiv = (content: string): string => {
+    const baseStyle = "font-family: Arial; font-size: 16px;";
+    return `<div style='${baseStyle}'>${content}</div>`;
+  };
+
+  // Properly escape content for CSV export
+  const escapeCSVField = (content: string, isHtmlField = false): string => {
+    let processed = content;
+    
+    if (!isHtmlField) {
+      // For non-HTML fields (like questions), clean up formatting
+      processed = content
+        .replace(/\r?\n/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    } else {
+      // For HTML fields, preserve structure but clean line breaks
+      processed = content
+        .replace(/\r?\n/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+    
+    // Always wrap in quotes and escape internal quotes
+    return `"${processed.replace(/"/g, '""')}"`;
   };
 
   const generateCSV = async () => {
     const rows = await Promise.all(
       cardsToExport.map(async (card) => {
-        // Convert markdown/HTML to proper HTML for CSV export
-        const frontHtml = await convertToHtml(card.front);
+        // Convert markdown to HTML for the back content
         const backHtml = await convertToHtml(card.back);
         
-        // Clean HTML content for CSV - remove problematic newlines but keep HTML tags
-        const frontText = cleanForCSV(frontHtml);
-        const backText = cleanForCSV(backHtml);
-        const tagsText = cleanForCSV(card.tags.join(';'));
+        // Format the front (question) - keep it simple, no HTML conversion needed
+        const frontText = card.front
+          .replace(/\*\*(.*?)\*\*/g, '$1') // Remove markdown bold
+          .replace(/\*(.*?)\*/g, '$1') // Remove markdown italic
+          .replace(/`(.*?)`/g, '$1') // Remove inline code
+          .trim();
         
-        return [
-          `"${frontText}"`,
-          `"${backText}"`,
-          `"${card.type}"`,
-          `"${card.difficulty}"`,
-          `"${tagsText}"`
-        ];
+        // Format the back as styled HTML div
+        const styledBackHtml = formatAsStyledDiv(backHtml);
+        
+        // Create CSV row with only front and back (Anki format)
+        const frontField = escapeCSVField(frontText, false);
+        const backField = escapeCSVField(styledBackHtml, true);
+        
+        return [frontField, backField];
       })
     );
     
-    // Optionally include headers
+    // Optionally include headers (only for front and back)
     const allRows = includeCSVHeaders 
-      ? [[`"${t('front')}"`, `"${t('back')}"`, `"${t('type')}"`, `"${t('difficulty')}"`, `"${t('tags')}"`], ...rows]
+      ? [[
+          escapeCSVField(t('front')),
+          escapeCSVField(t('back'))
+        ], ...rows]
       : rows;
     
     return allRows.map(row => row.join(',')).join('\n');
@@ -743,9 +767,20 @@ a:hover { color: #1d4ed8; }
                         </div>
                       </label>
                       <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                        <p className="text-xs text-blue-800 dark:text-blue-300">
-                          <strong>注意：</strong> CSV导出将包含HTML格式的内容，适合导入到Anki等支持HTML的应用中。这样可以保持文本格式、代码高亮和其他样式。
-                        </p>
+                        <div className="text-xs text-blue-800 dark:text-blue-300 space-y-1">
+                          <p><strong>Anki专用格式：</strong></p>
+                          <ul className="list-disc list-inside space-y-1 ml-2">
+                            <li>仅导出两列：问题和答案</li>
+                            <li>答案包装在带样式的HTML div中</li>
+                            <li>问题为纯文本，答案为HTML格式</li>
+                            <li>完全兼容Anki导入格式</li>
+                            <li>保持原有的文本格式和代码高亮</li>
+                          </ul>
+                          <p className="mt-2"><strong>示例格式：</strong></p>
+                          <code className="text-xs bg-white dark:bg-gray-800 p-1 rounded">
+                            问题,"&lt;div style='...'&gt;答案内容&lt;/div&gt;"
+                          </code>
+                        </div>
                       </div>
                     </div>
                   </div>

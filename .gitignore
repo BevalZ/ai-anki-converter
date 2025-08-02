@@ -22,3 +22,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Downloaded/Exported files from the app
+*.apkg
+*.csv
+*.json
+*.txt
+*.png
+*.jpeg
+*.jpg
+*.svg
+downloads/
+exports/

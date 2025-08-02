@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { aiService } from '@/services/aiService';
 import { keyManagementService } from '@/services/keyManagementService';
 import { toast } from 'sonner';
@@ -176,7 +177,9 @@ const defaultProviders: LLMProvider[] = [
   }
 ];
 
-export const useAppStore = create<AppState>((set, get) => ({
+export const useAppStore = create<AppState>()(
+  persist(
+    (set, get) => ({
   // Initial state
   inputText: '',
   processedText: '',
@@ -686,4 +689,69 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ isInitialized: true }); // Set as initialized even if loading fails
     }
   }
-}));
+}),
+{
+  name: 'codeca-app-storage',
+  partialize: (state) => ({
+    // 持久化的状态
+    cards: state.cards,
+    bucketCards: state.bucketCards,
+    locale: state.locale,
+    selectedProvider: state.selectedProvider,
+    isBucketVisible: state.isBucketVisible,
+    // 不持久化的状态（每次重新开始）
+    // inputText, processedText, knowledgePoints - 用户输入相关
+    // selectedCards - 选择状态
+    // isProcessing - UI状态
+    // currentPage - 页面状态
+  }),
+  // 自定义存储以处理Date对象
+  storage: createJSONStorage(() => ({
+    getItem: (name) => {
+      const str = localStorage.getItem(name);
+      if (!str) return null;
+      
+      try {
+        const parsed = JSON.parse(str);
+        // 恢复Date对象
+        if (parsed.state?.cards) {
+          parsed.state.cards = parsed.state.cards.map((card: any) => ({
+            ...card,
+            createdAt: new Date(card.createdAt)
+          }));
+        }
+        return JSON.stringify(parsed);
+      } catch {
+        return str;
+      }
+    },
+    setItem: (name, value) => {
+      try {
+        const parsed = JSON.parse(value);
+        // 序列化Date对象
+        if (parsed.state?.cards) {
+          parsed.state.cards = parsed.state.cards.map((card: any) => ({
+            ...card,
+            createdAt: card.createdAt instanceof Date ? card.createdAt.toISOString() : card.createdAt
+          }));
+        }
+        localStorage.setItem(name, JSON.stringify(parsed));
+      } catch {
+        localStorage.setItem(name, value);
+      }
+    },
+    removeItem: (name) => localStorage.removeItem(name)
+  })),
+  // 版本控制，用于处理数据结构变更
+  version: 1,
+  migrate: (persistedState: any, version: number) => {
+    // 如果需要迁移旧版本数据，可以在这里处理
+    if (version === 0) {
+      // 从版本0迁移到版本1的逻辑
+      return persistedState;
+    }
+    return persistedState;
+  }
+}
+)
+);
