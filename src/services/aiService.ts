@@ -627,6 +627,80 @@ Questions (JSON array format with "question" field):`;
       };
     }
   }
+
+  async generateMindMapSummary(provider: LLMProvider, text: string): Promise<AIResponse> {
+    const language = detectLanguage(text);
+    
+    const prompt = language === 'zh' 
+      ? `请分析以下文本内容，生成思维导图所需的信息：
+
+文本内容：
+${text}
+
+请按照以下JSON格式返回结果：
+{
+  "title": "核心主题（10字以内）",
+  "summary": "一句话总结核心内容（20字以内）"
+}
+
+要求：
+1. title应该是文本的核心主题，简洁明了
+2. summary应该是对整个内容的精炼总结，适合作为卡片正面
+3. 只返回JSON格式，不要其他解释`
+      : `Please analyze the following text content and generate information needed for a mind map:
+
+Text content:
+${text}
+
+Please return the result in the following JSON format:
+{
+  "title": "Core theme (within 10 words)",
+  "summary": "One-sentence summary of core content (within 20 words)"
+}
+
+Requirements:
+1. title should be the core theme of the text, concise and clear
+2. summary should be a refined summary of the entire content, suitable for the front of a card
+3. Only return JSON format, no other explanations`;
+
+    try {
+      const response = await this.makeRequest(provider, prompt);
+      
+      if (response.success && response.data) {
+        try {
+          const parsed = JSON.parse(response.data);
+          return {
+            success: true,
+            data: {
+              title: parsed.title || '思维导图',
+              summary: parsed.summary || '内容总结'
+            }
+          };
+        } catch (parseError) {
+          // 如果JSON解析失败，尝试提取内容
+          const content = response.data;
+          const titleMatch = content.match(/["']title["']\s*:\s*["']([^"']+)["']/);
+          const summaryMatch = content.match(/["']summary["']\s*:\s*["']([^"']+)["']/);
+          
+          return {
+            success: true,
+            data: {
+              title: titleMatch?.[1] || '思维导图',
+              summary: summaryMatch?.[1] || text.substring(0, 30) + '...'
+            }
+          };
+        }
+      } else {
+        return response;
+      }
+    } catch (error: any) {
+      console.error('Mind map summary generation error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to generate mind map summary'
+      };
+    }
+  }
 }
 
 export const aiService = new AIService();

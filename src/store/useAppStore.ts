@@ -76,6 +76,10 @@ interface AppState {
   isProcessing: boolean;
   currentPage: string;
   
+  // Mind Map State
+  mindMapData: { svg: string; title: string } | null;
+  showMindMapModal: boolean;
+  
   // Key Management State
   isInitialized: boolean;
   
@@ -110,6 +114,10 @@ interface AppState {
   setCurrentPage: (page: string) => void;
   setLocale: (locale: SupportedLocale) => void;
   
+  // Mind Map Actions
+  setMindMapData: (data: { svg: string; title: string } | null) => void;
+  setShowMindMapModal: (show: boolean) => void;
+  
   // Intelligent Key Management
   validateApiKey: (providerId: string) => Promise<void>;
   updateProviderApiKey: (providerId: string, apiKey: string) => Promise<void>;
@@ -123,6 +131,7 @@ interface AppState {
   rearrangeContent: (text: string) => Promise<{ points: string[]; count: number } | null>;
   enhanceCard: (cardId: string) => Promise<void>;
   retrieveProviderModels: (providerId: string) => Promise<void>;
+  generateMindMap: (text: string) => Promise<void>;
 }
 
 const defaultProviders: LLMProvider[] = [
@@ -193,6 +202,8 @@ export const useAppStore = create<AppState>()(
   locale: 'zh-CN',
   isProcessing: false,
   currentPage: 'home',
+  mindMapData: null,
+  showMindMapModal: false,
   isInitialized: false,
   
   // Text actions
@@ -328,6 +339,10 @@ export const useAppStore = create<AppState>()(
   
   // Locale actions
   setLocale: (locale) => set({ locale }),
+  
+  // Mind Map actions
+  setMindMapData: (data) => set({ mindMapData: data }),
+  setShowMindMapModal: (show) => set({ showMindMapModal: show }),
   
   // AI Functions with real API integration
   generateCards: async (text, type, difficulty, maxCards, silent) => {
@@ -520,6 +535,53 @@ export const useAppStore = create<AppState>()(
     } catch (error) {
       console.error('Model retrieval error:', error);
       toast.error('Failed to retrieve models');
+    } finally {
+      set({ isProcessing: false });
+    }
+  },
+
+  generateMindMap: async (text) => {
+    const state = get();
+    const provider = state.llmProviders.find(p => p.id === state.selectedProvider);
+    
+    if (!provider) {
+      toast.error('No AI provider selected');
+      return;
+    }
+    
+    if (!provider.apiKey) {
+      toast.error('API key not configured for selected provider');
+      return;
+    }
+    
+    set({ isProcessing: true });
+    
+    try {
+      // 使用AI生成思维导图的核心内容总结
+      const summaryResponse = await aiService.generateMindMapSummary(provider, text);
+      
+      if (summaryResponse.success && summaryResponse.data) {
+        const { title } = summaryResponse.data;
+        
+        // 导入思维导图生成工具
+        const { parseTextToMindMap, generateMindMapSVG } = await import('@/utils/mindMapGenerator');
+        
+        // 生成思维导图数据和SVG
+        const mindMapData = parseTextToMindMap(text, title);
+        const mindMapSVG = generateMindMapSVG(mindMapData);
+        
+        // 设置脑图数据并显示弹窗
+        const { setMindMapData, setShowMindMapModal } = get();
+        setMindMapData({ svg: mindMapSVG, title });
+        setShowMindMapModal(true);
+        
+        toast.success('脑图生成成功！');
+      } else {
+        toast.error(summaryResponse.error || 'Failed to generate mind map');
+      }
+    } catch (error) {
+      console.error('Mind map generation error:', error);
+      toast.error('Failed to generate mind map');
     } finally {
       set({ isProcessing: false });
     }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Brain, Sparkles, FileText, Zap, ChevronLeft, ChevronRight, RotateCcw, Trash2, ShoppingCart, Plus } from 'lucide-react';
+import { Brain, Sparkles, FileText, Zap, ChevronLeft, ChevronRight, RotateCcw, Trash2, ShoppingCart, Plus, X, Maximize2 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { toast } from 'sonner';
@@ -33,7 +33,11 @@ export default function Home() {
     deleteCard,
     bucketCards,
     toggleBucketCard,
-    initializeApp
+    initializeApp,
+    generateMindMap,
+    mindMapData,
+    showMindMapModal,
+    setShowMindMapModal
   } = useAppStore();
 
   // Initialize app on component mount
@@ -56,6 +60,18 @@ export default function Home() {
       setShowCardPreview(true);
     }
   }, [cards.length, showCardPreview]);
+
+  // ESC键关闭脑图弹窗
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showMindMapModal) {
+        setShowMindMapModal(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [showMindMapModal, setShowMindMapModal]);
 
   const cardTypes = [
     { id: 'basic', label: t('basicQA'), description: t('basicQADescription') },
@@ -106,6 +122,20 @@ export default function Home() {
       setActiveTab('processed');
       toast.success(t('knowledgePointsExtracted', { count: result.count }));
     }
+  };
+
+  const handleMindMap = async () => {
+    if (!inputText.trim()) {
+      toast.error(t('pleaseEnterTextToGenerateMindMap'));
+      return;
+    }
+
+    if (!hasApiKey) {
+      toast.error(t('pleaseConfigureApiKey'));
+      return;
+    }
+
+    await generateMindMap(inputText);
   };
 
   const handleGenerateCards = async () => {
@@ -296,6 +326,14 @@ export default function Home() {
                         >
                           <Zap className="h-4 w-4" />
                           <span>{t('rearrangeContent')}</span>
+                        </button>
+                        <button
+                          onClick={handleMindMap}
+                          disabled={isProcessing || !hasApiKey}
+                          className="flex items-center justify-center space-x-1 px-3 py-2 text-xs sm:text-sm bg-gradient-to-r from-green-500 to-green-600 text-white rounded-md hover:from-green-600 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] sm:min-h-0"
+                        >
+                          <Brain className="h-4 w-4" />
+                          <span>{t('generateMindMap')}</span>
                         </button>
                       </div>
                     </div>
@@ -595,9 +633,63 @@ export default function Home() {
                 </div>
               </div>
             )}
+            
+            {/* Mind Map Thumbnail */}
+            {mindMapData && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">脑图预览</h3>
+                  <button
+                    onClick={() => setShowMindMapModal(true)}
+                    className="flex items-center space-x-1 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                  >
+                    <Maximize2 className="h-3 w-3" />
+                    <span>放大查看</span>
+                  </button>
+                </div>
+                <div 
+                  className="cursor-pointer hover:opacity-80 transition-opacity border border-gray-200 dark:border-gray-600 rounded-lg p-2 bg-gray-50 dark:bg-gray-700"
+                  onClick={() => setShowMindMapModal(true)}
+                >
+                  <div 
+                    className="transform scale-50 origin-top-left overflow-hidden"
+                    style={{ width: '200%', height: '200px' }}
+                    dangerouslySetInnerHTML={{ __html: mindMapData.svg }}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+                  {mindMapData.title} - 点击查看完整脑图
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
+      
+      {/* Mind Map Modal */}
+      {showMindMapModal && mindMapData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-6xl max-h-[90vh] w-full overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                {mindMapData.title}
+              </h3>
+              <button
+                onClick={() => setShowMindMapModal(false)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+              </button>
+            </div>
+            <div className="p-6 overflow-auto max-h-[calc(90vh-80px)]">
+              <div 
+                className="flex justify-center"
+                dangerouslySetInnerHTML={{ __html: mindMapData.svg }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
