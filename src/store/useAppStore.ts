@@ -57,6 +57,12 @@ interface AppState {
   processedText: string;
   knowledgePoints: string[];
   
+  // Last operation tracking for retry functionality
+  lastOperation: {
+    type: 'summarize' | 'rearrange' | 'mindmap' | null;
+    inputText: string;
+  };
+  
   // Cards
   cards: AnkiCard[];
   selectedCards: string[];
@@ -87,6 +93,11 @@ interface AppState {
   setInputText: (text: string) => void;
   setProcessedText: (text: string) => void;
   setKnowledgePoints: (points: string[]) => void;
+  
+  // New actions for processed text operations
+  backfillProcessedText: () => void;
+  retryLastOperation: () => Promise<void>;
+  generateMindMapFromProcessed: () => Promise<void>;
   addCard: (card: Omit<AnkiCard, 'id' | 'createdAt'>) => void;
   addCards: (cards: AnkiCard[]) => void;
   updateCard: (id: string, updates: Partial<AnkiCard>) => void;
@@ -193,6 +204,7 @@ export const useAppStore = create<AppState>()(
   inputText: '',
   processedText: '',
   knowledgePoints: [],
+  lastOperation: { type: null, inputText: '' },
   cards: [],
   selectedCards: [],
   bucketCards: [],
@@ -210,6 +222,47 @@ export const useAppStore = create<AppState>()(
   setInputText: (text) => set({ inputText: text }),
   setProcessedText: (text) => set({ processedText: text }),
   setKnowledgePoints: (points) => set({ knowledgePoints: points }),
+  
+  // New processed text operations
+  backfillProcessedText: () => {
+    const state = get();
+    if (state.processedText) {
+      set({ inputText: state.processedText });
+      toast.success('已将处理后的内容回填到输入框');
+    }
+  },
+  
+  retryLastOperation: async () => {
+    const state = get();
+    if (!state.lastOperation.type || !state.lastOperation.inputText) {
+      toast.error('没有可重试的操作');
+      return;
+    }
+    
+    const { type, inputText } = state.lastOperation;
+    
+    switch (type) {
+      case 'summarize':
+        await get().summarizeText(inputText);
+        break;
+      case 'rearrange':
+        await get().rearrangeContent(inputText);
+        break;
+      case 'mindmap':
+        await get().generateMindMap(inputText);
+        break;
+    }
+  },
+  
+  generateMindMapFromProcessed: async () => {
+    const state = get();
+    if (!state.processedText) {
+      toast.error('没有已处理的内容可生成脑图');
+      return;
+    }
+    
+    await get().generateMindMap(state.processedText);
+  },
   
   // Card actions
   addCard: (cardData) => {
@@ -404,7 +457,10 @@ export const useAppStore = create<AppState>()(
       return;
     }
     
-    set({ isProcessing: true });
+    set({ 
+      isProcessing: true,
+      lastOperation: { type: 'summarize', inputText: text }
+    });
     
     try {
       const response = await aiService.summarizeText(provider, text);
@@ -437,7 +493,10 @@ export const useAppStore = create<AppState>()(
       return null;
     }
     
-    set({ isProcessing: true });
+    set({ 
+      isProcessing: true,
+      lastOperation: { type: 'rearrange', inputText: text }
+    });
     
     try {
       const response = await aiService.rearrangeContent(provider, text);
@@ -554,7 +613,10 @@ export const useAppStore = create<AppState>()(
       return;
     }
     
-    set({ isProcessing: true });
+    set({ 
+      isProcessing: true,
+      lastOperation: { type: 'mindmap', inputText: text }
+    });
     
     try {
       // 使用AI生成思维导图的核心内容总结
@@ -761,8 +823,12 @@ export const useAppStore = create<AppState>()(
     locale: state.locale,
     selectedProvider: state.selectedProvider,
     isBucketVisible: state.isBucketVisible,
+    // 新增：持久化文本内容和操作历史
+    inputText: state.inputText,
+    processedText: state.processedText,
+    knowledgePoints: state.knowledgePoints,
+    lastOperation: state.lastOperation,
     // 不持久化的状态（每次重新开始）
-    // inputText, processedText, knowledgePoints - 用户输入相关
     // selectedCards - 选择状态
     // isProcessing - UI状态
     // currentPage - 页面状态

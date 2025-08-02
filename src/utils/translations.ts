@@ -230,6 +230,14 @@ export const translations = {
     next: 'Next',
     type: 'Type',
     
+    // New processed text actions
+    backfill: 'Backfill',
+    retry: 'Retry',
+    mindMap: 'Mind Map',
+    backfillProcessedText: 'Backfilled processed content to input',
+    noOperationToRetry: 'No operation to retry',
+    noProcessedContentForMindMap: 'No processed content available for mind map',
+    
     // Additional messages
     noCardsGeneratedYet: 'No Cards Generated Yet',
     enterTextAndGenerate: 'Enter some text and click \'Generate AI Cards\' to see your flashcards here.',
@@ -536,6 +544,14 @@ export const translations = {
     previous: '上一个',
     next: '下一个',
     type: '类型',
+    
+    // New processed text actions
+    backfill: '回填',
+    retry: '再试',
+    mindMap: '脑图',
+    backfillProcessedText: '已将处理后的内容回填到输入框',
+    noOperationToRetry: '没有可重试的操作',
+    noProcessedContentForMindMap: '没有已处理的内容可生成脑图',
     
     // Additional messages
     noCardsGeneratedYet: '尚未生成卡片',

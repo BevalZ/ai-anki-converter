@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Brain, Sparkles, FileText, Zap, ChevronLeft, ChevronRight, RotateCcw, Trash2, ShoppingCart, Plus, X, Maximize2 } from 'lucide-react';
+import { Brain, Sparkles, FileText, Zap, ChevronLeft, ChevronRight, RotateCcw, Trash2, ShoppingCart, Plus, X, Maximize2, ArrowLeft, RefreshCw, Map } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { toast } from 'sonner';
@@ -37,7 +37,11 @@ export default function Home() {
     generateMindMap,
     mindMapData,
     showMindMapModal,
-    setShowMindMapModal
+    setShowMindMapModal,
+    // 新增的操作
+    backfillProcessedText,
+    retryLastOperation,
+    generateMindMapFromProcessed
   } = useAppStore();
 
   // Initialize app on component mount
@@ -354,17 +358,51 @@ export default function Home() {
                         </div>
                       </div>
                     )}
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-2 sm:space-y-0">
+                    <div className="flex flex-col space-y-3">
                       <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                         {processedText ? `${processedText.length} ${t('characters')}` : t('noContent')}
                       </span>
-                      <button
-                        onClick={() => setProcessedText('')}
-                        disabled={!processedText}
-                        className="text-xs sm:text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed self-start sm:self-auto"
-                      >
-                        {t('clear')}
-                      </button>
+                      
+                      {/* 新增的三个操作按钮 */}
+                      {processedText && (
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <button
+                            onClick={backfillProcessedText}
+                            className="flex items-center justify-center space-x-1 px-3 py-2 text-xs sm:text-sm bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-md hover:from-blue-600 hover:to-blue-700 transition-colors min-h-[44px] sm:min-h-0"
+                          >
+                            <ArrowLeft className="h-4 w-4" />
+                            <span>{t('backfill')}</span>
+                          </button>
+                          
+                          <button
+                            onClick={retryLastOperation}
+                            disabled={isProcessing}
+                            className="flex items-center justify-center space-x-1 px-3 py-2 text-xs sm:text-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-md hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px] sm:min-h-0"
+                          >
+                            <RefreshCw className="h-4 w-4" />
+                            <span>{t('retry')}</span>
+                          </button>
+                          
+                          <button
+                            onClick={generateMindMapFromProcessed}
+                            disabled={isProcessing}
+                            className="flex items-center justify-center space-x-1 px-3 py-2 text-xs sm:text-sm bg-gradient-to-r from-green-500 to-green-600 text-white rounded-md hover:from-green-600 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px] sm:min-h-0"
+                          >
+                            <Map className="h-4 w-4" />
+                            <span>{t('mindMap')}</span>
+                          </button>
+                        </div>
+                      )}
+                      
+                      <div className="flex justify-end">
+                        <button
+                          onClick={() => setProcessedText('')}
+                          disabled={!processedText}
+                          className="text-xs sm:text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {t('clear')}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
