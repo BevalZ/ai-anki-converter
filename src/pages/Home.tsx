@@ -339,68 +339,57 @@ export default function Home() {
                           <Brain className="h-4 w-4" />
                           <span>{t('generateMindMap')}</span>
                         </button>
+                        <button
+                          onClick={() => setInputText('')}
+                          disabled={!inputText}
+                          className="text-xs sm:text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed self-start sm:self-auto"
+                        >
+                          {t('clear')}
+                        </button>
                       </div>
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {processedText ? (
-                      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 sm:p-4 h-32 sm:h-48 overflow-auto">
-                        <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap text-sm sm:text-base">{processedText}</p>
-                      </div>
-                    ) : (
-                      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 sm:p-4 h-32 sm:h-48 flex items-center justify-center">
-                        <div className="text-center">
-                          <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400 mx-auto mb-2" />
-                          <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">
-                            {t('noCardsGenerated')}
-                          </p>
-                        </div>
-                      </div>
-                    )}
+                    <textarea
+                      value={processedText}
+                      onChange={(e) => setProcessedText(e.target.value)}
+                      placeholder={t('noCardsGenerated')}
+                      className="w-full h-32 sm:h-48 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 overflow-x-auto text-sm sm:text-base"
+                    />
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-2 sm:space-y-0">
                       <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                         {processedText ? `${processedText.length} ${t('characters')}` : t('noContent')}
                       </span>
                       
-                      {/* 新增的三个操作按钮 */}
-                      {processedText ? (
-                        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                          <button
-                            onClick={backfillProcessedText}
-                            className="flex items-center justify-center space-x-1 px-3 py-2 text-xs sm:text-sm bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-md hover:from-blue-600 hover:to-blue-700 transition-colors min-h-[44px] sm:min-h-0"
-                          >
-                            <ArrowLeft className="h-4 w-4" />
-                            <span>{t('backfill')}</span>
-                          </button>
-                          
-                          <button
-                            onClick={retryLastOperation}
-                            disabled={isProcessing}
-                            className="flex items-center justify-center space-x-1 px-3 py-2 text-xs sm:text-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-md hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px] sm:min-h-0"
-                          >
-                            <RefreshCw className="h-4 w-4" />
-                            <span>{t('retry')}</span>
-                          </button>
-                          
-                          <button
-                            onClick={generateMindMapFromProcessed}
-                            disabled={isProcessing}
-                            className="flex items-center justify-center space-x-1 px-3 py-2 text-xs sm:text-sm bg-gradient-to-r from-green-500 to-green-600 text-white rounded-md hover:from-green-600 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px] sm:min-h-0"
-                          >
-                            <Map className="h-4 w-4" />
-                            <span>{t('mindMap')}</span>
-                          </button>
-                          
-                          <button
-                            onClick={() => setProcessedText('')}
-                            disabled={!processedText}
-                            className="text-xs sm:text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed self-start sm:self-auto"
-                          >
-                            {t('clear')}
-                          </button>
-                        </div>
-                      ) : (
+                      <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                        <button
+                          onClick={backfillProcessedText}
+                          disabled={!processedText}
+                          className="flex items-center justify-center space-x-1 px-3 py-2 text-xs sm:text-sm bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-md hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px] sm:min-h-0"
+                        >
+                          <ArrowLeft className="h-4 w-4" />
+                          <span>{t('backfill')}</span>
+                        </button>
+                        
+                        <button
+                          onClick={retryLastOperation}
+                          disabled={isProcessing}
+                          className="flex items-center justify-center space-x-1 px-3 py-2 text-xs sm:text-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-md hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px] sm:min-h-0"
+                        >
+                          <RefreshCw className="h-4 w-4" />
+                          <span>{t('retry')}</span>
+                        </button>
+                        
+                        <button
+                          onClick={generateMindMapFromProcessed}
+                          disabled={isProcessing || !processedText}
+                          className="flex items-center justify-center space-x-1 px-3 py-2 text-xs sm:text-sm bg-gradient-to-r from-green-500 to-green-600 text-white rounded-md hover:from-green-600 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px] sm:min-h-0"
+                        >
+                          <Map className="h-4 w-4" />
+                          <span>{t('mindMap')}</span>
+                        </button>
+                        
                         <button
                           onClick={() => setProcessedText('')}
                           disabled={!processedText}
@@ -408,7 +397,7 @@ export default function Home() {
                         >
                           {t('clear')}
                         </button>
-                      )}
+                      </div>
                     </div>
                   </div>
                 )}
