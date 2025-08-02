@@ -702,7 +702,7 @@ export default function Home() {
       {/* Mind Map Modal */}
       {showMindMapModal && mindMapData && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-6xl max-h-[90vh] w-full overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-[95vw] max-h-[95vh] w-full overflow-hidden">
             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 {mindMapData.title}
@@ -714,9 +714,9 @@ export default function Home() {
                 <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
               </button>
             </div>
-            <div className="p-6 overflow-auto max-h-[calc(90vh-80px)]">
+            <div className="overflow-auto max-h-[calc(95vh-80px)] bg-gray-50 dark:bg-gray-900">
               <div 
-                className="flex justify-center"
+                className="min-w-fit min-h-fit p-4"
                 dangerouslySetInnerHTML={{ __html: mindMapData.svg }}
               />
             </div>
