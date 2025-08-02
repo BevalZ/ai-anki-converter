@@ -502,10 +502,10 @@ export const useAppStore = create<AppState>()(
       const response = await aiService.rearrangeContent(provider, text);
       
       if (response.success && response.data) {
-        const { points, count } = response.data;
+        const { points, count, structuredContent } = response.data;
         set({ 
           knowledgePoints: points,
-          processedText: points.join('\n\n')
+          processedText: structuredContent || points.join('\n\n')
         });
         // Don't show toast here, it will be handled in Home.tsx with proper translation
         return { points, count };

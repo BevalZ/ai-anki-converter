@@ -337,10 +337,18 @@ export function parseTextToMindMap(text: string, title: string): MindMapData {
   const lines = text.split('\n').filter(line => line.trim());
   const nodes: MindMapNode[] = [];
   
+  // 提取或使用提供的标题
+  let centerTitle = title;
+  
+  // 如果文本以一级标题开始，使用它作为中心节点
+  if (lines.length > 0 && lines[0].trim().startsWith('# ')) {
+    centerTitle = lines[0].trim().replace(/^#+\s*/, '');
+  }
+  
   // 中心节点
   nodes.push({
     id: 'center',
-    text: title.length > 12 ? title.substring(0, 12) + '...' : title,
+    text: centerTitle.length > 12 ? centerTitle.substring(0, 12) + '...' : centerTitle,
     level: 0,
     children: []
   });
@@ -348,16 +356,22 @@ export function parseTextToMindMap(text: string, title: string): MindMapData {
   // 解析内容生成节点
   let currentLevel1Node: MindMapNode | null = null;
   let nodeId = 1;
+  let skipFirstH1 = false; // 标记是否跳过第一个一级标题
   
   for (const line of lines) {
     const trimmed = line.trim();
     if (!trimmed) continue;
     
     // 检测标题级别
-    if (trimmed.startsWith('##')) {
-      // 二级标题 -> 一级节点
+    if (trimmed.startsWith('# ')) {
+      // 一级标题 - 如果是第一个且已用作中心节点，则跳过
+      if (!skipFirstH1) {
+        skipFirstH1 = true;
+        continue;
+      }
+      // 其他一级标题作为一级节点
       const text = trimmed.replace(/^#+\s*/, '');
-      const displayText = text.length > 8 ? text.substring(0, 8) + '...' : text;
+      const displayText = text.length > 10 ? text.substring(0, 10) + '...' : text;
       currentLevel1Node = {
         id: `node-${nodeId++}`,
         text: displayText,
@@ -365,10 +379,10 @@ export function parseTextToMindMap(text: string, title: string): MindMapData {
         children: []
       };
       nodes.push(currentLevel1Node);
-    } else if (trimmed.startsWith('#')) {
-      // 一级标题 -> 一级节点
+    } else if (trimmed.startsWith('## ')) {
+      // 二级标题 -> 一级节点（主要分类）
       const text = trimmed.replace(/^#+\s*/, '');
-      const displayText = text.length > 8 ? text.substring(0, 8) + '...' : text;
+      const displayText = text.length > 10 ? text.substring(0, 10) + '...' : text;
       currentLevel1Node = {
         id: `node-${nodeId++}`,
         text: displayText,
@@ -376,11 +390,11 @@ export function parseTextToMindMap(text: string, title: string): MindMapData {
         children: []
       };
       nodes.push(currentLevel1Node);
-    } else if (trimmed.startsWith('-') || trimmed.startsWith('•')) {
-      // 列表项 -> 二级节点
+    } else if (trimmed.startsWith('### ')) {
+      // 三级标题 -> 二级节点（如果有当前一级节点）
       if (currentLevel1Node) {
-        const text = trimmed.replace(/^[-•]\s*/, '');
-        const displayText = text.length > 6 ? text.substring(0, 6) + '...' : text;
+        const text = trimmed.replace(/^#+\s*/, '');
+        const displayText = text.length > 8 ? text.substring(0, 8) + '...' : text;
         const childNode = {
           id: `node-${nodeId++}`,
           text: displayText,
@@ -390,16 +404,32 @@ export function parseTextToMindMap(text: string, title: string): MindMapData {
         currentLevel1Node.children.push(childNode);
         nodes.push(childNode);
       }
-    } else if (trimmed.length > 5 && trimmed.length < 100) {
-      // 普通段落 -> 一级节点
-      const displayText = trimmed.length > 8 ? trimmed.substring(0, 8) + '...' : trimmed;
-      currentLevel1Node = {
-        id: `node-${nodeId++}`,
-        text: displayText,
-        level: 1,
-        children: []
-      };
-      nodes.push(currentLevel1Node);
+    } else if (trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
+      // 列表项 -> 二级节点
+      if (currentLevel1Node) {
+        const text = trimmed.replace(/^[-•]\s*/, '');
+        const displayText = text.length > 8 ? text.substring(0, 8) + '...' : text;
+        const childNode = {
+          id: `node-${nodeId++}`,
+          text: displayText,
+          level: 2,
+          children: []
+        };
+        currentLevel1Node.children.push(childNode);
+        nodes.push(childNode);
+      }
+    } else if (trimmed.length > 5 && trimmed.length < 100 && !trimmed.startsWith('#')) {
+      // 普通段落 -> 如果没有当前一级节点，创建一个
+      if (!currentLevel1Node) {
+        const displayText = trimmed.length > 10 ? trimmed.substring(0, 10) + '...' : trimmed;
+        currentLevel1Node = {
+          id: `node-${nodeId++}`,
+          text: displayText,
+          level: 1,
+          children: []
+        };
+        nodes.push(currentLevel1Node);
+      }
     }
   }
   

@@ -265,35 +265,133 @@ Summary:`;
 
   async rearrangeContent(provider: LLMProvider, text: string): Promise<AIResponse> {
     const detectedLanguage = detectLanguage(text);
-    const prompt = `Please analyze the following text and extract the core knowledge points. Break it down into distinct, important concepts that can be learned separately. Return the result as a JSON array where each item has a "point" field containing the knowledge point. IMPORTANT: Please respond in ${detectedLanguage} language to match the input text language.
+    
+    const prompt = detectedLanguage === 'zh' 
+      ? `请分析以下文本内容，将其重新整理为有层次感和逻辑性的结构化内容，便于后续生成思维导图。
 
+文本内容：
 ${text}
 
-Core knowledge points (JSON array format):`;
+请按照以下要求整理内容：
+
+1. **识别核心主题**：提取文本的核心主题作为标题
+2. **分层组织**：将内容按逻辑关系分为2-4个主要类别
+3. **细化要点**：每个类别下包含2-5个具体要点
+4. **使用标准格式**：
+   - 使用 # 表示核心主题（一级标题）
+   - 使用 ## 表示主要类别（二级标题）
+   - 使用 - 表示具体要点（列表项）
+
+输出格式示例：
+# 核心主题
+
+## 第一个主要类别
+- 具体要点1
+- 具体要点2
+- 具体要点3
+
+## 第二个主要类别
+- 具体要点1
+- 具体要点2
+
+## 第三个主要类别
+- 具体要点1
+- 具体要点2
+- 具体要点3
+
+要求：
+- 保持逻辑清晰，层次分明
+- 每个要点简洁明了，便于理解
+- 确保内容完整性，不遗漏重要信息
+- 适合后续生成思维导图的结构
+
+请直接输出整理后的内容，不要其他解释：`
+      : `Please analyze the following text content and reorganize it into a structured format with clear hierarchy and logic, suitable for subsequent mind map generation.
+
+Text content:
+${text}
+
+Please organize the content according to the following requirements:
+
+1. **Identify core theme**: Extract the core theme of the text as the title
+2. **Hierarchical organization**: Organize content into 2-4 main categories based on logical relationships
+3. **Detailed points**: Include 2-5 specific points under each category
+4. **Use standard format**:
+   - Use # for core theme (level 1 heading)
+   - Use ## for main categories (level 2 headings)
+   - Use - for specific points (list items)
+
+Output format example:
+# Core Theme
+
+## First Main Category
+- Specific point 1
+- Specific point 2
+- Specific point 3
+
+## Second Main Category
+- Specific point 1
+- Specific point 2
+
+## Third Main Category
+- Specific point 1
+- Specific point 2
+- Specific point 3
+
+Requirements:
+- Maintain clear logic and distinct hierarchy
+- Each point should be concise and easy to understand
+- Ensure content completeness without missing important information
+- Structure suitable for subsequent mind map generation
+
+Please output the organized content directly without other explanations:`;
     
     const response = await this.makeRequest(provider, prompt);
     
     if (response.success && response.data) {
       try {
-        const jsonMatch = response.data.match(/\[.*\]/s);
-        if (jsonMatch) {
-          const knowledgePoints = JSON.parse(jsonMatch[0]);
-          return {
-            success: true,
-            data: {
-              points: knowledgePoints.map((item: any) => item.point || item),
-              count: knowledgePoints.length
-            }
-          };
+        // 解析结构化内容，提取知识点
+        const content = response.data.trim();
+        const lines = content.split('\n').filter(line => line.trim());
+        const points: string[] = [];
+        
+        // 提取所有的二级标题和列表项作为知识点
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('## ')) {
+            // 二级标题作为主要知识点
+            points.push(trimmed.replace('## ', ''));
+          } else if (trimmed.startsWith('- ')) {
+            // 列表项作为具体知识点
+            points.push(trimmed.replace('- ', ''));
+          }
         }
+        
+        return {
+          success: true,
+          data: {
+            points: points,
+            count: points.length,
+            structuredContent: content // 保存完整的结构化内容
+          }
+        };
       } catch (parseError) {
-        console.error('Failed to parse knowledge points:', parseError);
+        console.error('Failed to parse structured content:', parseError);
+        // 如果解析失败，返回原始内容
+        return {
+          success: true,
+          data: {
+            points: [response.data],
+            count: 1,
+            structuredContent: response.data
+          }
+        };
       }
     }
     
     return {
       success: false,
-      error: 'Failed to extract knowledge points'
+      error: 'Failed to rearrange content'
     };
   }
 
