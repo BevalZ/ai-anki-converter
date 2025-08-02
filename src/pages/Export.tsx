@@ -85,6 +85,9 @@ export default function Export() {
   const [isExportingImages, setIsExportingImages] = useState(false);
   const [cardPreviews, setCardPreviews] = useState<Map<string, string>>(new Map());
   
+  // CSV export options
+  const [includeCSVHeaders, setIncludeCSVHeaders] = useState(false);
+  
   // Determine if we're in bucket mode
   useEffect(() => {
     const bucketParam = searchParams.get('bucket');
@@ -138,23 +141,43 @@ export default function Export() {
     return content;
   };
 
+  // Clean content for CSV export - preserve HTML but fix CSV structure issues
+  const cleanForCSV = (content: string): string => {
+    return content
+      .replace(/\r?\n/g, ' ') // Replace newlines with spaces to prevent CSV row breaks
+      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+      .trim() // Remove leading/trailing whitespace
+      .replace(/"/g, '""'); // Escape quotes for CSV format
+  };
+
   const generateCSV = async () => {
-    const headers = [t('front'), t('back'), t('type'), t('difficulty'), t('tags')];
     const rows = await Promise.all(
       cardsToExport.map(async (card) => {
+        // Convert markdown/HTML to proper HTML for CSV export
         const frontHtml = await convertToHtml(card.front);
         const backHtml = await convertToHtml(card.back);
+        
+        // Clean HTML content for CSV - remove problematic newlines but keep HTML tags
+        const frontText = cleanForCSV(frontHtml);
+        const backText = cleanForCSV(backHtml);
+        const tagsText = cleanForCSV(card.tags.join(';'));
+        
         return [
-          `"${frontHtml.replace(/"/g, '""')}"`,
-          `"${backHtml.replace(/"/g, '""')}"`,
-          card.type,
-          card.difficulty,
-          card.tags.join(';')
+          `"${frontText}"`,
+          `"${backText}"`,
+          `"${card.type}"`,
+          `"${card.difficulty}"`,
+          `"${tagsText}"`
         ];
       })
     );
     
-    return [headers, ...rows].map(row => row.join(',')).join('\n');
+    // Optionally include headers
+    const allRows = includeCSVHeaders 
+      ? [[`"${t('front')}"`, `"${t('back')}"`, `"${t('type')}"`, `"${t('difficulty')}"`, `"${t('tags')}"`], ...rows]
+      : rows;
+    
+    return allRows.map(row => row.join(',')).join('\n');
   };
 
   const generateJSON = async () => {
@@ -698,6 +721,32 @@ a:hover { color: #1d4ed8; }
                         <Eye className="h-4 w-4" />
                         <span>Preview Cards</span>
                       </button>
+                    </div>
+                  </div>
+                )}
+                
+                {/* CSV Format Options */}
+                {selectedFormat === 'csv' && (
+                  <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                    <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">CSV导出选项</h3>
+                    <div className="space-y-3">
+                      <label className="flex items-center space-x-3">
+                        <input
+                          type="checkbox"
+                          checked={includeCSVHeaders}
+                          onChange={(e) => setIncludeCSVHeaders(e.target.checked)}
+                          className="text-blue-600 focus:ring-blue-500 rounded"
+                        />
+                        <div>
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">包含表头</span>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">在CSV文件第一行添加列标题（正面、背面、类型、难度、标签）</p>
+                        </div>
+                      </label>
+                      <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <p className="text-xs text-blue-800 dark:text-blue-300">
+                          <strong>注意：</strong> CSV导出将包含HTML格式的内容，适合导入到Anki等支持HTML的应用中。这样可以保持文本格式、代码高亮和其他样式。
+                        </p>
+                      </div>
                     </div>
                   </div>
                 )}
