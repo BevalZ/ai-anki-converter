@@ -14,6 +14,14 @@ export interface AnkiCard {
   createdAt: Date;
 }
 
+export interface MindMap {
+  id: string;
+  title: string;
+  svg: string;
+  sourceText: string;
+  createdAt: Date;
+}
+
 export interface LLMProvider {
   id: string;
   name: string;
@@ -83,7 +91,8 @@ interface AppState {
   currentPage: string;
   
   // Mind Map State
-  mindMapData: { svg: string; title: string } | null;
+  mindMaps: MindMap[];
+  currentMindMapIndex: number;
   showMindMapModal: boolean;
   
   // Key Management State
@@ -126,7 +135,10 @@ interface AppState {
   setLocale: (locale: SupportedLocale) => void;
   
   // Mind Map Actions
-  setMindMapData: (data: { svg: string; title: string } | null) => void;
+  addMindMap: (mindMap: Omit<MindMap, 'id' | 'createdAt'>) => void;
+  deleteMindMap: (id: string) => void;
+  setCurrentMindMapIndex: (index: number) => void;
+  getCurrentMindMap: () => MindMap | null;
   setShowMindMapModal: (show: boolean) => void;
   
   // Intelligent Key Management
@@ -214,7 +226,8 @@ export const useAppStore = create<AppState>()(
   locale: 'zh-CN',
   isProcessing: false,
   currentPage: 'home',
-  mindMapData: null,
+  mindMaps: [],
+  currentMindMapIndex: 0,
   showMindMapModal: false,
   isInitialized: false,
   
@@ -394,7 +407,51 @@ export const useAppStore = create<AppState>()(
   setLocale: (locale) => set({ locale }),
   
   // Mind Map actions
-  setMindMapData: (data) => set({ mindMapData: data }),
+  addMindMap: (mindMapData) => {
+    const newMindMap: MindMap = {
+      id: Date.now().toString(),
+      ...mindMapData,
+      createdAt: new Date()
+    };
+    
+    set((state) => ({
+      mindMaps: [...state.mindMaps, newMindMap],
+      currentMindMapIndex: state.mindMaps.length, // Point to the new mind map
+      showMindMapModal: true
+    }));
+  },
+  
+  deleteMindMap: (id) => {
+    set((state) => {
+      const newMindMaps = state.mindMaps.filter(map => map.id !== id);
+      let newIndex = state.currentMindMapIndex;
+      
+      // Adjust current index if needed
+      if (newMindMaps.length === 0) {
+        newIndex = 0;
+        return {
+          mindMaps: newMindMaps,
+          currentMindMapIndex: newIndex,
+          showMindMapModal: false
+        };
+      } else if (state.currentMindMapIndex >= newMindMaps.length) {
+        newIndex = newMindMaps.length - 1;
+      }
+      
+      return {
+        mindMaps: newMindMaps,
+        currentMindMapIndex: newIndex
+      };
+    });
+  },
+  
+  setCurrentMindMapIndex: (index) => set({ currentMindMapIndex: index }),
+  
+  getCurrentMindMap: () => {
+    const state = get();
+    return state.mindMaps[state.currentMindMapIndex] || null;
+  },
+  
   setShowMindMapModal: (show) => set({ showMindMapModal: show }),
   
   // AI Functions with real API integration
@@ -632,10 +689,13 @@ export const useAppStore = create<AppState>()(
         const mindMapData = parseTextToMindMap(text, title);
         const mindMapSVG = generateMindMapSVG(mindMapData);
         
-        // 设置脑图数据并显示弹窗
-        const { setMindMapData, setShowMindMapModal } = get();
-        setMindMapData({ svg: mindMapSVG, title });
-        setShowMindMapModal(true);
+        // 添加新的思维导图到列表
+        const { addMindMap } = get();
+        addMindMap({ 
+          title, 
+          svg: mindMapSVG, 
+          sourceText: text 
+        });
         
         toast.success('脑图生成成功！');
       } else {
@@ -828,6 +888,9 @@ export const useAppStore = create<AppState>()(
     processedText: state.processedText,
     knowledgePoints: state.knowledgePoints,
     lastOperation: state.lastOperation,
+    // 思维导图状态
+    mindMaps: state.mindMaps,
+    currentMindMapIndex: state.currentMindMapIndex,
     // 不持久化的状态（每次重新开始）
     // selectedCards - 选择状态
     // isProcessing - UI状态
@@ -848,6 +911,12 @@ export const useAppStore = create<AppState>()(
             createdAt: new Date(card.createdAt)
           }));
         }
+        if (parsed.state?.mindMaps) {
+          parsed.state.mindMaps = parsed.state.mindMaps.map((mindMap: any) => ({
+            ...mindMap,
+            createdAt: new Date(mindMap.createdAt)
+          }));
+        }
         return JSON.stringify(parsed);
       } catch {
         return str;
@@ -861,6 +930,12 @@ export const useAppStore = create<AppState>()(
           parsed.state.cards = parsed.state.cards.map((card: any) => ({
             ...card,
             createdAt: card.createdAt instanceof Date ? card.createdAt.toISOString() : card.createdAt
+          }));
+        }
+        if (parsed.state?.mindMaps) {
+          parsed.state.mindMaps = parsed.state.mindMaps.map((mindMap: any) => ({
+            ...mindMap,
+            createdAt: mindMap.createdAt instanceof Date ? mindMap.createdAt.toISOString() : mindMap.createdAt
           }));
         }
         localStorage.setItem(name, JSON.stringify(parsed));

@@ -35,9 +35,13 @@ export default function Home() {
     toggleBucketCard,
     initializeApp,
     generateMindMap,
-    mindMapData,
+    mindMaps,
+    currentMindMapIndex,
     showMindMapModal,
     setShowMindMapModal,
+    setCurrentMindMapIndex,
+    getCurrentMindMap,
+    deleteMindMap,
     // 新增的操作
     backfillProcessedText,
     retryLastOperation,
@@ -668,10 +672,12 @@ export default function Home() {
             )}
             
             {/* Mind Map Thumbnail */}
-            {mindMapData && (
+            {mindMaps.length > 0 && (
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">脑图预览</h3>
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                    脑图预览 ({currentMindMapIndex + 1}/{mindMaps.length})
+                  </h3>
                   <button
                     onClick={() => setShowMindMapModal(true)}
                     className="flex items-center space-x-1 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
@@ -680,6 +686,46 @@ export default function Home() {
                     <span>放大查看</span>
                   </button>
                 </div>
+
+                {/* Navigation Controls */}
+                {mindMaps.length > 1 && (
+                  <div className="flex items-center justify-between mb-3">
+                    <button
+                      onClick={() => setCurrentMindMapIndex(Math.max(0, currentMindMapIndex - 1))}
+                      disabled={currentMindMapIndex === 0}
+                      className="flex items-center space-x-1 px-2 py-1 text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <ChevronLeft className="h-3 w-3" />
+                      <span>上一个</span>
+                    </button>
+                    
+                    {/* Indicators */}
+                    <div className="flex space-x-1">
+                      {mindMaps.map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={() => setCurrentMindMapIndex(index)}
+                          className={cn(
+                            'w-2 h-2 rounded-full transition-colors',
+                            index === currentMindMapIndex
+                              ? 'bg-blue-500'
+                              : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
+                          )}
+                        />
+                      ))}
+                    </div>
+                    
+                    <button
+                      onClick={() => setCurrentMindMapIndex(Math.min(mindMaps.length - 1, currentMindMapIndex + 1))}
+                      disabled={currentMindMapIndex === mindMaps.length - 1}
+                      className="flex items-center space-x-1 px-2 py-1 text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span>下一个</span>
+                      <ChevronRight className="h-3 w-3" />
+                    </button>
+                  </div>
+                )}
+
                 <div 
                   className="cursor-pointer hover:opacity-80 transition-opacity border border-gray-200 dark:border-gray-600 rounded-lg p-2 bg-gray-50 dark:bg-gray-700"
                   onClick={() => setShowMindMapModal(true)}
@@ -687,11 +733,11 @@ export default function Home() {
                   <div 
                     className="transform scale-50 origin-top-left overflow-hidden"
                     style={{ width: '200%', height: '200px' }}
-                    dangerouslySetInnerHTML={{ __html: mindMapData.svg }}
+                    dangerouslySetInnerHTML={{ __html: mindMaps[currentMindMapIndex]?.svg || '' }}
                   />
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
-                  {mindMapData.title} - 点击查看完整脑图
+                  {mindMaps[currentMindMapIndex]?.title} - 点击查看完整脑图
                 </p>
               </div>
             )}
@@ -700,13 +746,19 @@ export default function Home() {
       </div>
       
       {/* Mind Map Modal */}
-      {showMindMapModal && mindMapData && (
+      {showMindMapModal && mindMaps.length > 0 && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-[95vw] max-h-[95vh] w-full overflow-hidden">
+            {/* Header with title and navigation */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {mindMapData.title}
-              </h3>
+              <div className="flex items-center space-x-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {mindMaps[currentMindMapIndex]?.title}
+                </h3>
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  {currentMindMapIndex + 1} / {mindMaps.length}
+                </span>
+              </div>
               <button
                 onClick={() => setShowMindMapModal(false)}
                 className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
@@ -714,10 +766,71 @@ export default function Home() {
                 <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
               </button>
             </div>
-            <div className="overflow-auto max-h-[calc(95vh-80px)] bg-gray-50 dark:bg-gray-900">
+
+            {/* Navigation Controls */}
+            {mindMaps.length > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
+                <button
+                  onClick={() => setCurrentMindMapIndex(Math.max(0, currentMindMapIndex - 1))}
+                  disabled={currentMindMapIndex === 0}
+                  className="flex items-center space-x-1 px-3 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  <span>上一个</span>
+                </button>
+                
+                {/* Indicators */}
+                <div className="flex space-x-2">
+                  {mindMaps.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentMindMapIndex(index)}
+                      className={cn(
+                        'w-3 h-3 rounded-full transition-colors',
+                        index === currentMindMapIndex
+                          ? 'bg-blue-500'
+                          : 'bg-gray-300 dark:bg-gray-500 hover:bg-gray-400 dark:hover:bg-gray-400'
+                      )}
+                    />
+                  ))}
+                </div>
+                
+                <button
+                  onClick={() => setCurrentMindMapIndex(Math.min(mindMaps.length - 1, currentMindMapIndex + 1))}
+                  disabled={currentMindMapIndex === mindMaps.length - 1}
+                  className="flex items-center space-x-1 px-3 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span>下一个</span>
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+
+            {/* Mind Map Info */}
+            <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                创建时间: {mindMaps[currentMindMapIndex]?.createdAt.toLocaleString()}
+              </span>
+              <button
+                onClick={() => {
+                  const currentMap = mindMaps[currentMindMapIndex];
+                  if (currentMap) {
+                    deleteMindMap(currentMap.id);
+                    toast.success('脑图已删除');
+                  }
+                }}
+                className="flex items-center space-x-1 px-2 py-1 text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors"
+              >
+                <Trash2 className="h-3 w-3" />
+                <span>删除</span>
+              </button>
+            </div>
+
+            {/* Mind Map Content */}
+            <div className="overflow-auto max-h-[calc(95vh-200px)] bg-gray-50 dark:bg-gray-900">
               <div 
                 className="min-w-fit min-h-fit p-4"
-                dangerouslySetInnerHTML={{ __html: mindMapData.svg }}
+                dangerouslySetInnerHTML={{ __html: mindMaps[currentMindMapIndex]?.svg || '' }}
               />
             </div>
           </div>
