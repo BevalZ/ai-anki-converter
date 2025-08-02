@@ -91,11 +91,31 @@ export default function Export() {
   // Determine if we're in bucket mode
   useEffect(() => {
     const bucketParam = searchParams.get('bucket');
-    setIsBucketMode(bucketParam === 'true');
+    const bucketCards = getBucketCards();
+    
+    // If explicitly set via URL parameter, use that
     if (bucketParam === 'true') {
+      setIsBucketMode(true);
+      setDeckName(t('selectedCardsFromBucket'));
+    } 
+    // If no URL parameter but bucket has cards, default to bucket mode
+    else if (bucketParam !== 'false' && bucketCards.length > 0) {
+      setIsBucketMode(true);
       setDeckName(t('selectedCardsFromBucket'));
     }
-  }, [searchParams]);
+    // Otherwise use all cards mode
+    else {
+      setIsBucketMode(false);
+      setDeckName('My Anki Deck');
+    }
+  }, [searchParams, t]);
+
+  // Update deck name when bucket mode changes
+  useEffect(() => {
+    if (isBucketMode) {
+      setDeckName(t('selectedCardsFromBucket'));
+    }
+  }, [isBucketMode, t]);
 
   // Check AnkiConnect connection on component mount
   useEffect(() => {
@@ -607,17 +627,58 @@ a:hover { color: #1d4ed8; }
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <div className="flex items-center space-x-3 mb-2">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {isBucketMode ? t('exportSelectedCards') : t('exportCards')}
-            </h1>
-            {isBucketMode && (
-              <div className="flex items-center space-x-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full text-sm font-medium">
-                <ShoppingCart className="h-4 w-4" />
-                <span>{t('fromBucket')}</span>
-              </div>
-            )}
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-3">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                {isBucketMode ? t('exportSelectedCards') : t('exportCards')}
+              </h1>
+              {isBucketMode && (
+                <div className="flex items-center space-x-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full text-sm font-medium">
+                  <ShoppingCart className="h-4 w-4" />
+                  <span>{t('fromBucket')}</span>
+                </div>
+              )}
+            </div>
+            
+            {/* Mode Toggle Buttons */}
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => {
+                  setIsBucketMode(true);
+                  setDeckName(t('selectedCardsFromBucket'));
+                }}
+                className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  isBucketMode
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+                disabled={getBucketCards().length === 0}
+              >
+                <div className="flex items-center space-x-1">
+                  <ShoppingCart className="h-4 w-4" />
+                  <span>Bucket ({getBucketCards().length})</span>
+                </div>
+              </button>
+              
+              <button
+                onClick={() => {
+                  setIsBucketMode(false);
+                  setDeckName('My Anki Deck');
+                }}
+                className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  !isBucketMode
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                <div className="flex items-center space-x-1">
+                  <Package className="h-4 w-4" />
+                  <span>所有卡片 ({cards.length})</span>
+                </div>
+              </button>
+            </div>
           </div>
+          
           <p className="text-gray-600 dark:text-gray-400">
             {isBucketMode 
               ? t('exportBucketDescription')

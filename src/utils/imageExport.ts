@@ -170,65 +170,76 @@ function createCardSVG(card: Card, isBack: boolean = false): string {
 // Create DOM element that matches the website's card style
 function createCardElement(card: Card, isBack: boolean = false): HTMLElement {
   const cardElement = document.createElement('div');
+  
+  // Use solid colors instead of gradients for better html2canvas compatibility
+  const backgroundColor = isBack ? '#f0fdf4' : '#eff6ff';
+  const borderColor = isBack ? '#bbf7d0' : '#bfdbfe';
+  
   cardElement.style.cssText = `
     width: 400px;
-    height: 256px;
-    background: ${isBack 
-      ? 'linear-gradient(to bottom right, rgb(240, 253, 244), rgb(220, 252, 231))' 
-      : 'linear-gradient(to bottom right, rgb(239, 246, 255), rgb(219, 234, 254))'}
-    ;
-    border: 2px solid ${isBack ? 'rgb(187, 247, 208)' : 'rgb(191, 219, 254)'};
+    min-height: 256px;
+    background-color: ${backgroundColor};
+    border: 2px solid ${borderColor};
     border-radius: 8px;
     padding: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: Arial, sans-serif;
     position: relative;
+    box-sizing: border-box;
+    margin: 0;
   `;
 
   const contentWrapper = document.createElement('div');
   contentWrapper.style.cssText = `
     text-align: center;
-    overflow: auto;
-    max-height: 100%;
     width: 100%;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.6;
   `;
 
   const titleElement = document.createElement('div');
   titleElement.style.cssText = `
     font-size: 14px;
-    color: ${isBack ? 'rgb(22, 163, 74)' : 'rgb(37, 99, 235)'};
-    font-weight: 500;
-    margin-bottom: 8px;
+    color: ${isBack ? '#16a34a' : '#2563eb'};
+    font-weight: bold;
+    margin-bottom: 12px;
+    font-family: Arial, sans-serif;
   `;
   titleElement.textContent = isBack ? '背面' : '正面';
 
   const contentElement = document.createElement('div');
   contentElement.style.cssText = `
-    color: rgb(17, 24, 39);
+    color: #111827;
     font-size: 18px;
     font-weight: 500;
     word-break: break-words;
     line-height: 1.6;
+    font-family: Arial, sans-serif;
   `;
 
-  // Handle content rendering
+  // Handle content rendering - simplified for better html2canvas compatibility
   if (isBack) {
-    // For back content, we need to render it similar to CardContent component
-    const hasHtmlOrMarkdown = /<[^>]*>|```|\*\*|__|\[.*\]\(.*\)|#{1,6}\s/.test(card.back);
-    if (hasHtmlOrMarkdown) {
-      // Simple HTML/Markdown rendering for export
-      let processedContent = card.back
-        .replace(/\*\*(.*?)\*\*/g, '<strong style="font-weight: bold; color: rgb(29, 78, 216); background-color: rgb(239, 246, 255); padding: 2px 4px; border-radius: 4px;">$1</strong>')
-        .replace(/\*(.*?)\*/g, '<em style="font-style: italic; color: rgb(147, 51, 234); font-weight: 500;">$1</em>')
-        .replace(/`(.*?)`/g, '<code style="background-color: rgb(243, 244, 246); color: rgb(220, 38, 38); padding: 4px 8px; border-radius: 4px; font-size: 14px; font-family: monospace; border: 1px solid rgb(209, 213, 219);">$1</code>')
-        .replace(/\n/g, '<br>');
-      contentElement.innerHTML = processedContent;
-    } else {
-      contentElement.textContent = card.back;
-    }
+    // Simple text processing for back content
+    let processedContent = card.back
+      // Remove HTML tags for now
+      .replace(/<[^>]*>/g, '')
+      // Convert markdown to plain text
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/\*(.*?)\*/g, '$1')
+      .replace(/`(.*?)`/g, '$1')
+      .replace(/```[\s\S]*?```/g, (match) => {
+        return match.replace(/```(\w+)?\n?/, '').replace(/```$/, '');
+      })
+      // Convert line breaks
+      .replace(/\n/g, ' ')
+      .trim();
+    
+    contentElement.textContent = processedContent;
   } else {
+    // Front content is always simple text
     contentElement.textContent = card.front;
   }
 
@@ -271,34 +282,42 @@ export async function exportCardAsImage(
     container.style.cssText = `
       background: white;
       padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
+      display: block;
       width: 440px;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
     `;
 
     // Create front and back card elements
     const frontCard = createCardElement(card, false);
     const backCard = createCardElement(card, true);
     
+    // Add some spacing between cards
+    frontCard.style.marginBottom = '20px';
+    
     container.appendChild(frontCard);
     container.appendChild(backCard);
     
-    // Temporarily add to DOM for rendering
-    container.style.position = 'absolute';
-    container.style.left = '-9999px';
-    container.style.top = '-9999px';
+    // Add to DOM in a visible location temporarily
+    container.style.position = 'fixed';
+    container.style.left = '0px';
+    container.style.top = '0px';
+    container.style.zIndex = '9999';
     document.body.appendChild(container);
 
     try {
+      // Wait for content to render
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
       // Generate image using html2canvas
       const canvas = await html2canvas(container, {
         backgroundColor: '#ffffff',
-        scale: 2, // Higher resolution
+        scale: 1, // Reduce scale to avoid issues
         useCORS: true,
         allowTaint: true,
-        width: 440,
-        height: 552 // 256 * 2 + 20 (gap) + 20 * 2 (padding)
+        logging: true, // Enable logging for debugging
+        removeContainer: false,
+        foreignObjectRendering: false // Disable foreign object rendering
       });
 
       // Convert to blob and download
@@ -402,6 +421,7 @@ export async function exportCardsAsImages(
       flex-direction: column;
       gap: 20px;
       width: 440px;
+      box-sizing: border-box;
     `;
 
     // Create card elements for each card
@@ -428,23 +448,32 @@ export async function exportCardsAsImages(
     container.style.position = 'absolute';
     container.style.left = '-9999px';
     container.style.top = '-9999px';
+    container.style.zIndex = '-1';
     document.body.appendChild(container);
 
     try {
-      // Calculate total height
-      const cardHeight = 256;
-      const gap = 20;
-      const separatorHeight = 21; // 1px + 10px margin top + 10px margin bottom
-      const totalHeight = 40 + (cards.length * (cardHeight * 2 + gap)) + ((cards.length - 1) * separatorHeight);
+      // Wait for content to render and calculate actual dimensions
+      await new Promise(resolve => setTimeout(resolve, 200));
       
-      // Generate image using html2canvas
+      const actualHeight = container.scrollHeight;
+      const actualWidth = container.scrollWidth;
+      
+      // Make sure container is visible for html2canvas
+      container.style.position = 'static';
+      container.style.left = 'auto';
+      container.style.top = 'auto';
+      container.style.zIndex = 'auto';
+      
+      // Generate image using html2canvas with dynamic dimensions
       const canvas = await html2canvas(container, {
         backgroundColor: '#ffffff',
         scale: 2, // Higher resolution
         useCORS: true,
         allowTaint: true,
-        width: 440,
-        height: totalHeight
+        width: actualWidth,
+        height: actualHeight,
+        logging: false,
+        removeContainer: false
       });
 
       // Convert to blob and download
